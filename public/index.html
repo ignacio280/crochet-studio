@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tienda de crochet</title>
+<meta name="theme-color" content="#faf6ff">
+<link rel="icon" href="/img/favicon.svg">
+<link rel="manifest" href="/manifest.webmanifest">
+{{META}}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css?v=11">
+<link rel="stylesheet" href="/css/intro.css?v=4">
+<script>
+  /* Decide en el <head>, antes de pintar, si la bienvenida corre.
+     Sin JavaScript no tapa nada, y quien ya la vio en esta sesión
+     entra directo. */
+  (function () {
+    try {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (sessionStorage.getItem('sd.intro') === 'visto') return;
+      document.documentElement.classList.add('con-intro');
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+
+<!-- Bienvenida: oculta salvo que el script del <head> la habilite -->
+<div class="intro" data-intro aria-hidden="true">
+  <div class="intro__hoja intro__hoja--izq"></div>
+  <div class="intro__hoja intro__hoja--der"></div>
+  <div class="intro__centro">
+    <span class="intro__marca" data-intro-marca>{{MARCA}}</span>
+    <span class="intro__regla"></span>
+    <span class="intro__pie">{{TAGLINE}}</span>
+  </div>
+</div>
+
+<a class="saltar-al-contenido" href="#catalogo">Saltar al catálogo</a>
+
+<div class="grano" aria-hidden="true"></div>
+
+<div class="anuncio" id="anuncio"></div>
+
+<header class="cabecera">
+  <div class="contenedor cabecera__fila">
+    <button class="menu-boton" id="menuBoton" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuMovil">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="nav" aria-label="Principal">
+      <a href="#catalogo">Tienda</a>
+      <a href="#como">Cómo encargar</a>
+    </nav>
+    <a class="marca" href="#inicio" id="marca">&nbsp;</a>
+    <nav class="nav nav--der" aria-label="Secundaria">
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <div class="cabecera__espacio" aria-hidden="true"></div>
+  </div>
+  <nav class="menu-movil" id="menuMovil" aria-label="Menú móvil">
+    <a href="#catalogo">Tienda</a>
+    <a href="#como">Cómo encargar</a>
+    <a href="#contacto">Contacto</a>
+  </nav>
+</header>
+
+<main id="inicio">
+
+  <!-- ================= Portada ================= -->
+  <section class="portada">
+    <div class="portada__texto">
+      <p class="etiqueta" id="portadaEtiqueta"></p>
+      <h1 class="portada__titulo" id="portadaTitulo"></h1>
+      <p class="portada__bajada" id="portadaBajada"></p>
+      <a class="boton" href="#catalogo" id="portadaCta"></a>
+    </div>
+    <div class="portada__foto" id="portadaFoto"></div>
+  </section>
+
+  <!-- ================= Banda ================= -->
+  <section class="banda">
+    <h2 class="banda__titulo aparece" id="bandaTitulo"></h2>
+    <p class="banda__texto aparece" id="bandaTexto"></p>
+    <a class="boton boton--linea aparece" id="bandaCta" href="#contacto"></a>
+  </section>
+
+  <!-- ================= Cómo encargar ================= -->
+  <section class="pasos" id="como">
+    <div class="contenedor">
+      <div class="pasos__caja aparece">
+        <h2 class="pasos__titulo" id="pasosTitulo"></h2>
+        <div class="pasos__grid" id="pasosGrid"></div>
+        <a class="boton boton--rosa" href="#catalogo">Ver la tienda</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Catálogo ================= -->
+  <section class="catalogo" id="catalogo">
+    <div class="contenedor">
+      <div class="seccion__cabeza aparece">
+        <p class="etiqueta">La tienda</p>
+        <h2 class="seccion__titulo">Piezas disponibles</h2>
+        <p class="seccion__bajada">Cada pieza es única y está tejida a mano. Si algo se agotó o lo quieres en otro color, escríbeme y lo hacemos.</p>
+      </div>
+      <div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría"></div>
+      <div class="grid-productos" id="grid">
+        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
+        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
+        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
+        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Tira ================= -->
+  <section class="tira">
+    <div class="tira__grid">
+      <div class="tira__item">
+        <h3>Hecho a mano</h3>
+        <p>Pieza por pieza, sin máquinas.</p>
+      </div>
+      <div class="tira__item">
+        <h3>Envíos</h3>
+        <p id="tiraEnvio"></p>
+      </div>
+      <div class="tira__item">
+        <h3>Encargos</h3>
+        <p>Colores y tallas a pedido.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= Pie ================= -->
+<footer class="pie" id="contacto">
+  <div class="contenedor">
+    <div class="pie__grid">
+      <div>
+        <div class="pie__marca" id="pieMarca"></div>
+        <p id="pieTexto"></p>
+      </div>
+      <div>
+        <h4>Escríbeme</h4>
+        <ul class="pie__lista" id="pieContacto"></ul>
+      </div>
+      <div>
+        <h4>El sitio</h4>
+        <ul class="pie__lista">
+          <li><a href="#catalogo">Tienda</a></li>
+          <li><a href="#como">Cómo encargar</a></li>
+          <li><a href="/legal.html#terminos">Términos y condiciones</a></li>
+          <li><a href="/legal.html#devoluciones">Cambios y devoluciones</a></li>
+          <li><a href="/legal.html#privacidad">Privacidad</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="pie__abajo">
+      <span id="pieCopy"></span>
+      <span id="pieFirma"></span>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= Ficha ================= -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalNombre">
+  <div class="modal__fondo" data-cerrar></div>
+  <div class="modal__caja">
+    <button class="modal__cerrar" data-cerrar aria-label="Cerrar">&times;</button>
+    <div class="modal__galeria">
+      <div class="modal__principal" id="modalPrincipal"></div>
+      <div class="modal__miniaturas" id="modalMiniaturas"></div>
+    </div>
+    <div class="modal__info">
+      <p class="etiqueta" id="modalCategoria"></p>
+      <h2 class="modal__nombre" id="modalNombre"></h2>
+      <div class="modal__precio" id="modalPrecio"></div>
+      <div class="modal__descripcion" id="modalDescripcion"></div>
+      <div class="modal__detalles" id="modalDetalles"></div>
+      <div class="modal__acciones">
+        <a class="boton" id="modalPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a>
+        <p class="modal__nota" id="modalNota"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+<script src="/js/intro.js?v=4"></script>
+<script src="/js/site.js?v=7"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Información legal</title>
+<meta name="description" content="Términos, cambios y devoluciones, y privacidad.">
+<meta name="theme-color" content="#faf6ff">
+<link rel="icon" href="/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css?v=11">
+<style>
+  .legal { max-width: 78ch; margin: 0 auto; padding: clamp(40px, 7vw, 84px) var(--margen) var(--aire); }
+  .legal__intro { text-align: center; margin-bottom: clamp(40px, 6vw, 72px); }
+  .legal__intro h1 { font-size: var(--t-h2); margin-bottom: 16px; }
+  .legal__vendedor {
+    background: var(--arena);
+    border-radius: var(--radio);
+    padding: 24px 28px;
+    margin-bottom: clamp(36px, 5vw, 56px);
+    font-size: 0.9375rem;
+  }
+  .legal__vendedor dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; margin: 0; }
+  .legal__vendedor dt { font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tinta-45); align-self: center; }
+  .legal__vendedor dd { margin: 0; font-weight: 600; }
+  .legal__seccion { padding-top: clamp(32px, 4vw, 52px); border-top: 1px solid var(--linea); margin-top: clamp(32px, 4vw, 52px); }
+  .legal__seccion:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
+  .legal__seccion h2 { font-size: var(--t-h3); margin-bottom: 20px; }
+  .legal__cuerpo { white-space: pre-line; color: var(--tinta-70); max-width: none; }
+  .legal__nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: clamp(36px, 5vw, 56px); }
+  .legal__volver { text-align: center; padding-bottom: var(--aire); }
+</style>
+</head>
+<body>
+
+<a class="saltar-al-contenido" href="#contenido">Saltar al contenido</a>
+
+<div class="grano" aria-hidden="true"></div>
+
+<header class="cabecera">
+  <div class="contenedor cabecera__fila">
+    <div></div>
+    <a class="marca" href="/" id="marca">&nbsp;</a>
+    <nav class="nav nav--der" aria-label="Principal">
+      <a href="/">Volver a la tienda</a>
+    </nav>
+  </div>
+</header>
+
+<main class="legal" id="contenido">
+  <div class="legal__intro">
+    <p class="etiqueta">Información legal</p>
+    <h1>Condiciones de compra</h1>
+    <p class="seccion__bajada" style="margin:0 auto">Lo que conviene saber antes de encargar una pieza.</p>
+  </div>
+
+  <nav class="legal__nav" aria-label="Secciones">
+    <a class="filtro" href="#terminos">Términos</a>
+    <a class="filtro" href="#devoluciones">Cambios y devoluciones</a>
+    <a class="filtro" href="#privacidad">Privacidad</a>
+  </nav>
+
+  <div class="legal__vendedor" id="vendedor"></div>
+
+  <section class="legal__seccion" id="terminos">
+    <h2>Términos y condiciones</h2>
+    <div class="legal__cuerpo" id="textoTerminos"></div>
+  </section>
+
+  <section class="legal__seccion" id="devoluciones">
+    <h2>Cambios y devoluciones</h2>
+    <div class="legal__cuerpo" id="textoDevoluciones"></div>
+  </section>
+
+  <section class="legal__seccion" id="privacidad">
+    <h2>Privacidad</h2>
+    <div class="legal__cuerpo" id="textoPrivacidad"></div>
+  </section>
+</main>
+
+<div class="legal__volver">
+  <a class="boton" href="/">Volver a la tienda</a>
+</div>
+
+<footer class="pie">
+  <div class="contenedor">
+    <div class="pie__abajo" style="border:0;padding-top:0">
+      <span id="pieCopy"></span>
+      <span id="pieContacto"></span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/legal.js?v=1"></script>
+</body>
+</html>

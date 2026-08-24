@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cómo se usa el panel</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/admin.css?v=1">
+<style>
+  .pagina { max-width: 760px; padding-bottom: 60px; }
+  .tarjeta h2 { margin-bottom: 12px; }
+  .tarjeta ol, .tarjeta ul { margin: 0 0 4px; padding-left: 20px; }
+  .tarjeta li { margin-bottom: 9px; }
+  .intro { text-align: center; padding: 52px 20px 10px; }
+  .intro h1 { font-size: clamp(38px, 7vw, 56px); margin-bottom: 10px; }
+  .intro p { color: var(--tinta-70); max-width: 46ch; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Cómo se usa</h1>
+  <p>Todo lo que aparece en la tienda se cambia desde el panel. No hay que tocar código ni pedirle nada a nadie.</p>
+</div>
+
+<main class="pagina">
+
+  <div class="tarjeta">
+    <h2>Entrar</h2>
+    <ol>
+      <li>Anda a la dirección de tu tienda y agrégale <strong>/admin</strong> al final.</li>
+      <li>Escribe tu clave y aprieta <strong>Entrar</strong>.</li>
+      <li>La sesión queda abierta un mes en ese dispositivo, así que no vas a tener que escribirla cada vez.</li>
+    </ol>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Subir un producto</h2>
+    <ol>
+      <li>En la pestaña <strong>Productos</strong>, aprieta <strong>+ Agregar producto</strong>.</li>
+      <li>Ponle nombre y precio. El precio lo puedes escribir como quieras: <em>19500</em>, <em>19.500</em> o <em>$19.500</em>; abajo te muestra cómo va a quedar.</li>
+      <li>Arrastra las fotos o aprieta la caja para elegirlas del teléfono. La primera foto es la portada.</li>
+      <li>Aprieta <strong>Guardar producto</strong>. Ya está publicado.</li>
+    </ol>
+    <p class="tarjeta__ayuda" style="margin:14px 0 0">Las fotos se achican solas antes de guardarse, así que la tienda no se pone lenta aunque las subas directo de la cámara.</p>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Marcar algo como agotado</h2>
+    <p class="tarjeta__ayuda" style="margin:0">Abre el producto y marca <strong>Marcar como agotado</strong>. Sigue apareciendo en la tienda con el cartel de agotado, y el botón cambia a «Consultar por encargo». Si prefieres que desaparezca del todo, desmarca <strong>Mostrar en la tienda</strong>.</p>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Cambiar el orden</h2>
+    <p class="tarjeta__ayuda" style="margin:0">Las flechas ↑ ↓ de cada producto lo suben o lo bajan, y ese es el orden en que se ven en la tienda. Si marcas uno como <strong>Destacado</strong>, ese se va primero.</p>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Cambiar los textos y la foto grande</h2>
+    <p class="tarjeta__ayuda">En <strong>Portada y textos</strong> cambias el nombre de la tienda, la frase de la portada, los pasos para encargar y la foto de portada.</p>
+    <p class="tarjeta__ayuda" style="margin:0">Ojo: ahí los cambios <strong>no</strong> se guardan solos. Cuando editas algo aparece abajo una barra con el botón <strong>Guardar cambios</strong>. Hasta que no lo aprietes, la tienda sigue mostrando lo anterior.</p>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Los pedidos</h2>
+    <p class="tarjeta__ayuda">La tienda no cobra por internet: cada producto tiene un botón <strong>Pedir por WhatsApp</strong> que te abre la conversación con el nombre y el precio de la pieza ya escritos. Tú respondes y coordinan pago y envío como prefieras.</p>
+    <p class="tarjeta__ayuda" style="margin:0">Tu número se pone una sola vez en <strong>Contacto y envíos</strong>, con el código del país y sin signos (Chile: 56 y después tus 9 números). Ahí mismo hay un enlace para probar que quedó bien.</p>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Respaldo</h2>
+    <p class="tarjeta__ayuda" style="margin:0">En <strong>Ajustes</strong> puedes <strong>Descargar respaldo</strong>: baja un archivo con todos tus productos, fotos y textos. Guárdalo de vez en cuando. Si algún día se pierde algo, con <strong>Cargar respaldo</strong> vuelve todo tal cual estaba.</p>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Si olvidas la clave</h2>
+    <p class="tarjeta__ayuda" style="margin:0">Se puede recuperar desde el panel del hosting donde vive la tienda, poniendo las variables <strong>ADMIN_PASSWORD</strong> (la clave nueva) y <strong>ADMIN_RESET=1</strong>, reiniciando una vez y sacando después <strong>ADMIN_RESET</strong>. Está explicado paso a paso en el archivo README del proyecto. Lo más simple, igual, es anotarla en algún lado.</p>
+  </div>
+
+  <div style="text-align:center;padding:10px 0 40px">
+    <a class="btn btn--rosa" href="/admin">Volver al panel</a>
+  </div>
+
+</main>
+</body>
+</html>

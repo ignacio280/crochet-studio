@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel de la tienda</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/admin.css?v=5">
+</head>
+<body>
+
+<!-- ================= Entrada ================= -->
+<section class="entrada" id="entrada">
+  <form class="entrada__caja" id="formEntrada">
+    <h1>Tu tienda</h1>
+    <p>Escribe tu clave para entrar y editar.</p>
+    <div class="campo">
+      <label for="clave">Clave</label>
+      <input type="password" id="clave" autocomplete="current-password" required>
+    </div>
+    <button class="btn btn--principal" style="width:100%" type="submit">Entrar</button>
+    <p id="errorEntrada" style="color:#b3456a;margin:14px 0 0;min-height:20px"></p>
+    <p style="margin:0;font-size:13px"><a href="/ayuda.html">¿Cómo se usa esto?</a></p>
+  </form>
+</section>
+<!-- ================= Panel ================= -->
+<div id="panel" class="oculto">
+
+  <header class="barra">
+    <div class="barra__fila">
+      <h1 class="barra__titulo">Panel de la tienda<small id="marcaBarra"></small></h1>
+      <a class="btn btn--chico" href="/ayuda.html" target="_blank" rel="noopener">¿Cómo se usa?</a>
+      <a class="btn btn--chico" href="/" target="_blank" rel="noopener">Ver la tienda</a>
+      <button class="btn btn--chico" id="salir">Salir</button>
+    </div>
+    <nav class="pestanas">
+      <button class="pestana activa" data-vista="productos">Productos</button>
+      <button class="pestana" data-vista="textos">Portada y textos</button>
+      <button class="pestana" data-vista="contacto">Contacto y envíos</button>
+      <button class="pestana" data-vista="legal">Legal</button>
+      <button class="pestana" data-vista="ajustes">Ajustes</button>
+    </nav>
+  </header>
+
+  <main class="pagina">
+
+    <!-- ---------- Productos ---------- -->
+    <section class="vista" id="vistaProductos">
+      <div class="tarjeta">
+        <h2>Tus productos</h2>
+        <p class="tarjeta__ayuda">Lo que agregues acá aparece en la tienda al instante. El orden de esta lista es el orden en que se ven.</p>
+        <button class="btn btn--principal" id="nuevoProducto">+ Agregar producto</button>
+      </div>
+      <div class="nota oculto" id="notaEjemplos"></div>
+      <div class="lista" id="listaProductos"></div>
+    </section>
+
+    <!-- ---------- Textos ---------- -->
+    <section class="vista oculto" id="vistaTextos">
+      <div class="tarjeta">
+        <h2>Portada</h2>
+        <p class="tarjeta__ayuda">Lo primero que ve alguien al entrar.</p>
+        <div class="campo">
+          <label>Foto de portada <span class="pista">(vertical se ve mejor)</span></label>
+          <div class="fotos" id="fotoHero"></div>
+          <div class="soltar" data-imagen="heroImagen" data-contenedor="fotoHero">
+            <strong>Subir foto de portada</strong>
+            Aprieta acá o arrastra una imagen
+          </div>
+        </div>
+        <div class="campo">
+          <label for="s_marca">Nombre de la tienda</label>
+          <input type="text" id="s_marca" data-set="marca">
+        </div>
+        <div class="campo">
+          <label for="s_tagline">Frase corta debajo del nombre</label>
+          <input type="text" id="s_tagline" data-set="tagline">
+        </div>
+        <div class="campo">
+          <label for="s_anuncio">Cintillo de arriba <span class="pista">(déjalo vacío si no quieres mostrarlo)</span></label>
+          <input type="text" id="s_anuncio" data-set="anuncio">
+        </div>
+        <div class="campo">
+          <label for="s_heroTitulo">Título grande <span class="pista">(cada Enter es un salto de línea)</span></label>
+          <textarea id="s_heroTitulo" data-set="heroTitulo" rows="3"></textarea>
+        </div>
+        <div class="campo">
+          <label for="s_heroTexto">Texto de la portada</label>
+          <textarea id="s_heroTexto" data-set="heroTexto" rows="3"></textarea>
+        </div>
+        <div class="campo">
+          <label for="s_heroCta">Texto del botón</label>
+          <input type="text" id="s_heroCta" data-set="heroCta">
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Banda del medio</h2>
+        <p class="tarjeta__ayuda">La franja beige con la frase grande.</p>
+        <div class="campo">
+          <label for="s_bandaTitulo">Frase grande</label>
+          <textarea id="s_bandaTitulo" data-set="bandaTitulo" rows="2"></textarea>
+        </div>
+        <div class="campo">
+          <label for="s_bandaTexto">Texto</label>
+          <textarea id="s_bandaTexto" data-set="bandaTexto" rows="3"></textarea>
+        </div>
+        <div class="campo">
+          <label for="s_bandaCta">Texto del botón</label>
+          <input type="text" id="s_bandaCta" data-set="bandaCta">
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Cómo encargar</h2>
+        <p class="tarjeta__ayuda">Los tres pasos sobre las franjas rosadas.</p>
+        <div class="campo">
+          <label for="s_pasosTitulo">Título</label>
+          <input type="text" id="s_pasosTitulo" data-set="pasosTitulo">
+        </div>
+        <div id="editorPasos"></div>
+      </div>
+
+    </section>
+
+    <!-- ---------- Contacto ---------- -->
+    <section class="vista oculto" id="vistaContacto">
+      <div class="tarjeta">
+        <h2>Cómo te escriben</h2>
+        <p class="tarjeta__ayuda">El botón "Pedir por WhatsApp" abre una conversación contigo con el pedido ya escrito.</p>
+        <div class="nota" id="notaWhatsapp">
+          <strong>Tu número de WhatsApp</strong>
+          Escríbelo con el código del país y sin signos. Para Chile: 56 y después los 9 números. Ejemplo: 56912345678
+        </div>
+        <div class="campo">
+          <label for="s_whatsapp">WhatsApp</label>
+          <input type="text" id="s_whatsapp" data-set="whatsapp" inputmode="numeric">
+          <p class="campo__prueba" style="margin:8px 0 0;font-size:13px"><a id="probarWhatsapp" href="#" target="_blank" rel="noopener">Probar el enlace</a></p>
+        </div>
+        <div class="fila">
+          <div class="campo">
+            <label for="s_instagram">Instagram <span class="pista">(solo el usuario)</span></label>
+            <input type="text" id="s_instagram" data-set="instagram" placeholder="tu.usuario">
+          </div>
+          <div class="campo">
+            <label for="s_email">Correo <span class="pista">(opcional)</span></label>
+            <input type="email" id="s_email" data-set="email">
+          </div>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Envíos</h2>
+        <div class="campo">
+          <label for="s_envioTexto">Cómo haces los envíos</label>
+          <textarea id="s_envioTexto" data-set="envioTexto" rows="3"></textarea>
+        </div>
+        <div class="fila">
+          <div class="campo">
+            <label for="s_moneda">Moneda</label>
+            <select id="s_moneda" data-set="moneda">
+              <option value="CLP">Peso chileno (CLP)</option>
+              <option value="ARS">Peso argentino (ARS)</option>
+              <option value="MXN">Peso mexicano (MXN)</option>
+              <option value="PEN">Sol peruano (PEN)</option>
+              <option value="COP">Peso colombiano (COP)</option>
+              <option value="USD">Dólar (USD)</option>
+              <option value="EUR">Euro (EUR)</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="s_pieDeFirma">Firma del pie <span class="pista">(opcional)</span></label>
+            <input type="text" id="s_pieDeFirma" data-set="pieDeFirma">
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ---------- Legal ---------- -->
+    <section class="vista oculto" id="vistaLegal">
+      <div class="tarjeta">
+        <h2>Quién vende</h2>
+        <p class="tarjeta__ayuda">La Ley del Consumidor exige que esto sea visible en el sitio. Sin estos datos la tienda no cumple.</p>
+        <div class="fila">
+          <div class="campo">
+            <label for="s_legalNombre">Nombre o razón social</label>
+            <input type="text" id="s_legalNombre" data-set="legalNombre">
+          </div>
+          <div class="campo">
+            <label for="s_legalRut">RUT</label>
+            <input type="text" id="s_legalRut" data-set="legalRut">
+          </div>
+        </div>
+        <div class="campo">
+          <label for="s_legalComuna">Comuna <span class="pista">(opcional)</span></label>
+          <input type="text" id="s_legalComuna" data-set="legalComuna">
+        </div>
+      </div>
+
+      <div class="nota">
+        <strong>Estos textos son un borrador</strong>
+        Están escritos para no partir de cero y para reflejar cómo funciona esta tienda, pero no son asesoría legal. Léelos, ajústalos a cómo trabajas tú, y si vendes en volumen conviene que un abogado o el SERNAC les dé una mirada antes de publicar.
+      </div>
+
+      <div class="tarjeta">
+        <h2>Términos y condiciones</h2>
+        <p class="tarjeta__ayuda">Precios, plazos, encargos a pedido y derecho a retracto.</p>
+        <div class="campo">
+          <label for="s_terminos">Texto</label>
+          <textarea id="s_terminos" data-set="terminos" rows="16"></textarea>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Cambios y devoluciones</h2>
+        <p class="tarjeta__ayuda">Qué cubre la garantía y qué no.</p>
+        <div class="campo">
+          <label for="s_devoluciones">Texto</label>
+          <textarea id="s_devoluciones" data-set="devoluciones" rows="14"></textarea>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Privacidad</h2>
+        <p class="tarjeta__ayuda">Este sitio no recolecta datos, y el texto lo dice. Si algún día agregas un formulario o pago en línea, hay que actualizarlo.</p>
+        <div class="campo">
+          <label for="s_privacidad">Texto</label>
+          <textarea id="s_privacidad" data-set="privacidad" rows="12"></textarea>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Ver la página</h2>
+        <p class="tarjeta__ayuda">Así la ven tus clientas. Acuérdate de guardar antes de mirar.</p>
+        <a class="btn" href="/legal.html" target="_blank" rel="noopener">Abrir la página legal</a>
+      </div>
+    </section>
+
+    <!-- ---------- Ajustes ---------- -->
+    <section class="vista oculto" id="vistaAjustes">
+      <div class="tarjeta">
+        <h2>Categorías</h2>
+        <p class="tarjeta__ayuda">Sirven para los filtros de la tienda. Solo se muestran las que tengan productos.</p>
+        <div class="etiquetas" id="listaCategorias"></div>
+        <div class="fila">
+          <div class="campo" style="margin:0">
+            <label for="nuevaCategoria">Agregar categoría</label>
+            <input type="text" id="nuevaCategoria" placeholder="Ej: Bufandas">
+          </div>
+          <div class="campo" style="margin:0;display:flex;align-items:flex-end">
+            <button class="btn" id="agregarCategoria" type="button">Agregar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Cambiar la clave</h2>
+        <div id="avisoClave" class="nota oculto">
+          <strong>Todavía usas la clave que vino por defecto</strong>
+          Cámbiala ahora para que nadie más pueda entrar a tu panel.
+        </div>
+        <form id="formClave">
+          <div class="fila">
+            <div class="campo">
+              <label for="claveActual">Clave actual</label>
+              <input type="password" id="claveActual" autocomplete="current-password">
+            </div>
+            <div class="campo">
+              <label for="claveNueva">Clave nueva <span class="pista">(mínimo 6)</span></label>
+              <input type="password" id="claveNueva" autocomplete="new-password">
+            </div>
+          </div>
+          <button class="btn btn--principal" type="submit">Guardar clave nueva</button>
+        </form>
+      </div>
+
+      <div class="tarjeta">
+        <h2>Respaldo</h2>
+        <p class="tarjeta__ayuda">Descarga un archivo con todo lo que hay en la tienda: productos, fotos y textos. Si algo se pierde, lo vuelves a cargar acá.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="exportar" type="button">Descargar respaldo</button>
+          <button class="btn" id="importarBoton" type="button">Cargar respaldo</button>
+          <input type="file" id="importar" accept="application/json" class="oculto">
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ---------- Barra de guardado ---------- -->
+  <div class="guardar-barra" id="barraGuardar">
+    <div class="guardar-barra__fila">
+      <span class="guardar-barra__texto">Tienes cambios sin guardar.</span>
+      <button class="btn btn--chico" id="descartar">Descartar</button>
+      <button class="btn btn--principal" id="guardar">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Editor de producto ================= -->
+<div class="capa" id="editor" role="dialog" aria-modal="true" aria-labelledby="editorTitulo">
+  <div class="capa__caja">
+    <div class="capa__cabeza">
+      <h2 id="editorTitulo">Producto</h2>
+      <button class="btn btn--chico" id="cerrarEditor" type="button">Cerrar</button>
+    </div>
+    <div class="capa__cuerpo">
+      <div class="campo">
+        <label for="p_nombre">Nombre</label>
+        <input type="text" id="p_nombre" placeholder="Ej: Chaleco de lana gruesa">
+      </div>
+      <div class="fila">
+        <div class="campo">
+          <label for="p_precio">Precio</label>
+          <input type="text" id="p_precio" inputmode="numeric" placeholder="25000">
+          <p class="pista" id="pistaPrecio" style="margin:6px 0 0;font-size:13px;color:#6f635b"></p>
+        </div>
+        <div class="campo">
+          <label for="p_precioAntes">Precio anterior <span class="pista">(opcional, para ofertas)</span></label>
+          <input type="text" id="p_precioAntes" inputmode="numeric">
+        </div>
+      </div>
+      <div class="campo">
+        <label for="p_categoria">Categoría</label>
+        <select id="p_categoria"></select>
+      </div>
+      <div class="campo">
+        <label for="p_descripcion">Descripción</label>
+        <textarea id="p_descripcion" rows="4" placeholder="Cuenta cómo es la pieza, con qué hilo la tejiste, para qué sirve."></textarea>
+      </div>
+      <div class="campo">
+        <label for="p_detalles">Detalles <span class="pista">(talla, medidas, cuidado del tejido)</span></label>
+        <textarea id="p_detalles" rows="3"></textarea>
+      </div>
+      <div class="campo">
+        <label>Fotos <span class="pista">(la primera es la portada; hasta 6)</span></label>
+        <div class="fotos" id="fotosProducto"></div>
+        <div class="soltar" id="soltarProducto">
+          <strong>Subir fotos</strong>
+          Aprieta acá o arrastra las imágenes
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="p_visible"> Mostrar en la tienda</label>
+      <label class="check"><input type="checkbox" id="p_agotado"> Marcar como agotado</label>
+      <label class="check"><input type="checkbox" id="p_destacado"> Destacar (aparece primero)</label>
+    </div>
+    <div class="capa__pie">
+      <button class="btn btn--peligro oculto" id="borrarProducto" type="button">Borrar producto</button>
+      <button class="btn" id="cancelarProducto" type="button">Cancelar</button>
+      <button class="btn btn--principal" id="guardarProducto" type="button">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+<script src="/js/admin.js?v=2"></script>
+</body>
+</html>

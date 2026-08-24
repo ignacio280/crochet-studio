@@ -1,0 +1,33 @@
+# Despliegue en Render, todo en Render.
+#
+# El plan gratis no tiene disco persistente: lo que se escriba en el sistema
+# de archivos se pierde en cada redespliegue. Por eso los datos van a la base
+# de Postgres, y el servidor la usa sola en cuanto ve DATABASE_URL.
+
+databases:
+  - name: crochet-datos
+    plan: free
+    databaseName: crochet
+    user: crochet
+
+services:
+  - type: web
+    name: crochet-studio
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/site
+    envVars:
+      # Render conecta la base sola: no hay que copiar la cadena a mano.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: crochet-datos
+          property: connectionString
+
+      # Sin esto, el primer arranque inventa una clave y la deja en el
+      # registro. Si prefieres elegirla tú, la pones en el panel de Render
+      # y no se imprime nada.
+      - key: ADMIN_PASSWORD
+        sync: false
