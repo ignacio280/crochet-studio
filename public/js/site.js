@@ -113,23 +113,51 @@
 
   /* ---------------- Las láminas ----------------
 
-     Hoy ninguna pieza tiene fotografía. Un rectángulo gris diría
-     "falta contenido"; el encargo pide exactamente lo contrario.
-     Así que la ausencia se dibuja: tejido, la inicial calada y el
-     aviso en letra chica. En cuanto entre la foto, esto se cae
-     solo y no hay que tocar nada. */
+     Mientras el catálogo no tenga fotos propias, cada pieza toma
+     una de muestra de public/img/muestra/. Son de Unsplash, cuya
+     licencia permite uso comercial sin atribución. Van marcadas
+     como muestra en la esquina: el sitio está publicado, y quien
+     entre tiene que poder saber que esa no es la pieza real.
 
-  function lamina(p, prioritaria) {
+     Nada de esto hay que deshacerlo después. En cuanto la duenia
+     suba una foto de verdad desde el panel, `p.fotos[0]` existe y
+     la muestra desaparece sola. Para quitar el aviso, borrar la
+     línea de plato__falta. Para quitar las muestras del todo,
+     borrar MUESTRAS y volver al tejido dibujado. */
+
+  var MUESTRAS = ['chaleco', 'bolso', 'gorro', 'manta', 'osito'];
+
+  // Se elige por lo que la pieza es, no por su orden: si mañana
+  // hay diez productos, cada uno sigue cayendo en la muestra que
+  // le corresponde.
+  var PISTAS = [
+    [/chaleco|sueter|su[eé]ter|polera|cardigan|chaqueta|ropa/i, 'chaleco'],
+    [/bolso|cartera|mochila|morral|rafia/i, 'bolso'],
+    [/gorro|beanie|sombrero|bufanda|cuello/i, 'gorro'],
+    [/manta|frazada|cobija|cojin|coj[ií]n|deco/i, 'manta'],
+    [/osito|amigurumi|mu[nñ]eco|peluche|juguete/i, 'osito']
+  ];
+
+  function muestraPara(p, i) {
+    var texto = (p.nombre || '') + ' ' + (p.categoria || '');
+    for (var k = 0; k < PISTAS.length; k++) {
+      if (PISTAS[k][0].test(texto)) return PISTAS[k][1];
+    }
+    return MUESTRAS[i % MUESTRAS.length];
+  }
+
+  function lamina(p, prioritaria, i) {
+    var carga = prioritaria
+      ? 'loading="eager" fetchpriority="high" decoding="async"'
+      : 'loading="lazy" decoding="async"';
+
     if (p.fotos && p.fotos[0]) {
-      var carga = prioritaria
-        ? 'loading="eager" fetchpriority="high" decoding="async"'
-        : 'loading="lazy" decoding="async"';
       return '<img src="' + escapar(p.fotos[0]) + '" alt="' + escapar(p.nombre) + '" ' + carga + '>';
     }
-    return '<div class="plato__tejido">' +
-      '<span class="plato__inicial">' + escapar((p.nombre || '?').trim().charAt(0).toUpperCase()) + '</span>' +
-      '<span class="plato__falta">Fotografía en camino</span>' +
-      '</div>';
+
+    return '<img src="/img/muestra/' + muestraPara(p, i || 0) + '.webp" ' +
+             'alt="Foto de muestra: ' + escapar(p.nombre) + '" ' + carga + '>' +
+           '<span class="plato__falta">Foto de muestra</span>';
   }
 
   function estadoDe(p) {
@@ -171,7 +199,7 @@
           '<span class="escena__numeral" aria-hidden="true">' + nn(n) + '</span>' +
           '<button class="escena__plato" data-cursor="ver" data-abrir="' + escapar(p.id) + '" ' +
                   'aria-label="Ver ' + escapar(p.nombre) + '">' +
-            '<span class="plato__medio">' + lamina(p, i === 0) + '</span>' +
+            '<span class="plato__medio">' + lamina(p, i === 0, i) + '</span>' +
           '</button>' +
           '<div class="escena__ficha">' +
             '<div>' +
@@ -335,9 +363,10 @@
             '<img src="' + escapar(f) + '" alt="' + escapar(p.nombre) + ' — ' + (k + 1) + '" loading="lazy" decoding="async">' +
             '</div>';
         }).join('')
-      : '<div class="universo__lamina"><div class="plato__tejido">' +
-          '<span class="plato__inicial">' + escapar((p.nombre || '?').trim().charAt(0).toUpperCase()) + '</span>' +
-          '<span class="plato__falta">Fotografía en camino</span></div></div>';
+      : '<div class="universo__lamina">' +
+          '<img src="/img/muestra/' + muestraPara(p, i) + '.webp" ' +
+          'alt="Foto de muestra: ' + escapar(p.nombre) + '" loading="lazy" decoding="async">' +
+          '<span class="plato__falta">Foto de muestra</span></div>';
 
     var mensaje = '¡Hola! Me interesa la pieza ' + nn(n) + ', "' + p.nombre + '" (' + precio(p.precio) + '). ¿Sigue disponible?';
 

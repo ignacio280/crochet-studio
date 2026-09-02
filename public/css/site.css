@@ -131,6 +131,35 @@ button { font: inherit; color: inherit; }
 .saltar-al-contenido:focus { left: var(--s4); top: var(--s4); }
 
 /* ============================================================
+   GUÍAS DEL CONTENEDOR  (skill: container-lines)
+
+   Dos líneas de 1px en los bordes exactos del contenedor, fijas y
+   detrás de todo. No decoran: dan la tensión estructural que hace
+   que una página con mucho aire se lea medida en vez de vacía. El
+   ancho lo comparten con .contenedor, que es la regla que la skill
+   marca como no negociable.
+   ============================================================ */
+
+.guias {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.guias::before,
+.guias::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: var(--linea);
+}
+.guias::before { left: max(var(--margen), calc((100vw - var(--ancho)) / 2)); }
+.guias::after  { right: max(var(--margen), calc((100vw - var(--ancho)) / 2)); }
+
+@media (max-width: 620px) { .guias { display: none; } }
+
+/* ============================================================
    CURSOR
 
    Cambia según lo que hay debajo. Es lenguaje visual, no juguete:
@@ -236,6 +265,48 @@ button { font: inherit; color: inherit; }
 @media (max-width: 760px) {
   .menu-boton { display: block; }
   .indice { display: none; }
+}
+
+/* ============================================================
+   DESENFOQUE PROGRESIVO  (skill: progressive-blur)
+
+   La cabecera pegada corta el contenido contra un canto duro. Esto
+   lo disuelve: tres capas de desenfoque creciente, cada una con su
+   máscara, así lo que pasa por debajo se va perdiendo en vez de
+   desaparecer de golpe.
+
+   La skill propone ocho capas. Acá van tres: sobre una página con
+   cinco escenarios fijados, cada backdrop-filter obliga a releer lo
+   que hay detrás en cada cuadro, y ese coste ya me pasó factura una
+   vez. Tres alcanzan para que el degradado se lea.
+   ============================================================ */
+
+.desenfoque {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 128px;
+  z-index: 55;              /* bajo la cabecera, sobre el contenido */
+  pointer-events: none;
+}
+.desenfoque > div { position: absolute; inset: 0; }
+
+.desenfoque > div:nth-child(1) {
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 40%, transparent 70%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 40%, transparent 70%);
+}
+.desenfoque > div:nth-child(2) {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 20%, transparent 48%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 20%, transparent 48%);
+}
+.desenfoque > div:nth-child(3) {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 26%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 26%);
 }
 
 /* ============================================================
@@ -396,6 +467,24 @@ button { font: inherit; color: inherit; }
   padding: calc(var(--nav) + var(--s6)) var(--margen) var(--reserva);
 }
 
+/* Marcas de esquina donde el contenedor cruza cada escena. La
+   skill pide de 4 a 8px y exactas sobre esquinas reales; van solo
+   arriba, que es donde la escena empieza. */
+.escena__stage::before,
+.escena__stage::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--nav) + var(--s6));
+  width: 5px; height: 5px;
+  background: var(--linea-fuerte);
+  pointer-events: none;
+  z-index: 0;
+  opacity: clamp(0, calc(var(--p, 0) * 4), 1);
+}
+.escena__stage::before { left: max(var(--margen), calc((100vw - var(--ancho)) / 2)); transform: translate(-50%, -50%); }
+.escena__stage::after  { right: max(var(--margen), calc((100vw - var(--ancho)) / 2)); transform: translate(50%, -50%); }
+@media (max-width: 620px) { .escena__stage::before, .escena__stage::after { display: none; } }
+
 /* El numeral: enorme, detrás de todo, a otro ritmo. Convierte
    "otro producto" en PIEZA 03. */
 .escena__numeral {
@@ -409,6 +498,11 @@ button { font: inherit; color: inherit; }
   opacity: 0.08;
   white-space: nowrap;
   pointer-events: none; user-select: none;
+  /* skill: css-alpha-masking. El numeral es más ancho que la
+     ventana; cortado a hueso parece un error de recorte, y con el
+     borde desvanecido parece que sigue detrás. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
   transform:
     translate3d(calc(-50% + (0.5 - var(--p, 0)) * 26vw), -50%, 0)
     scale(calc(0.9 + var(--p, 0) * 0.25));
@@ -517,26 +611,18 @@ button { font: inherit; color: inherit; }
    la ausencia se diseña: un tejido dibujado, la inicial calada
    encima y el aviso en letra chica. Cuando entre la fotografía,
    esto desaparece solo. */
-.plato__tejido {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  background:
-    repeating-linear-gradient(45deg,  var(--linea) 0 1px, transparent 1px 13px),
-    repeating-linear-gradient(-45deg, var(--linea) 0 1px, transparent 1px 13px),
-    var(--hueso);
-}
-.plato__inicial {
-  font-family: var(--serif); font-weight: 300;
-  font-size: clamp(5rem, 16vw, 11rem);
-  line-height: 1; color: var(--noche);
-  opacity: 0.14;
-  user-select: none;
-}
+/* Aviso de foto de muestra. Va sobre fotografía, así que necesita
+   su propio fondo para leerse. Pequeño y en una esquina: tiene que
+   ser honesto, no un cartel. */
 .plato__falta {
-  position: absolute; left: var(--s4); bottom: var(--s4);
-  font-family: var(--mono); font-size: 10px;
+  position: absolute; left: var(--s3); bottom: var(--s3);
+  z-index: 2;
+  font-family: var(--mono); font-size: 9px;
   letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--tinta-45);
+  color: var(--tinta-70);
+  background: rgba(255, 253, 255, 0.86);
+  border: 1px solid var(--linea);
+  padding: 3px 8px;
 }
 
 /* Ficha de escena: aparece en el último tercio, cuando la pieza
@@ -625,6 +711,10 @@ button { font: inherit; color: inherit; }
 @keyframes entraUniverso { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
 @media (max-width: 860px) { .universo__caja { grid-template-columns: 1fr; } }
 
+/* skill: beautiful-shadows, en su escalón "sm". SDB no usa Tailwind,
+   así que se toman los valores y no las clases. Y se usa solo acá:
+   es el único elemento que flota de verdad sobre otra capa. El
+   resto del sitio sigue separando con pelo de 1px. */
 .universo__cerrar {
   position: fixed;
   top: var(--s5); right: var(--s5);
@@ -632,6 +722,10 @@ button { font: inherit; color: inherit; }
   width: 42px; height: 42px;
   background: var(--papel);
   border: 1px solid var(--linea);
+  box-shadow:
+    0 2px 3px -1px rgba(42, 31, 66, 0.10),
+    0 1px 0 0 rgba(42, 31, 66, 0.02),
+    0 0 0 1px rgba(42, 31, 66, 0.06);
   color: var(--tinta);
   font-size: 18px; line-height: 1; cursor: pointer;
   border-radius: var(--radio);
@@ -795,6 +889,7 @@ button { font: inherit; color: inherit; }
   }
   .aparece { opacity: 1; transform: none; }
   .cursor { display: none !important; }
+  .desenfoque { display: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
   .escena { min-height: 0; }
