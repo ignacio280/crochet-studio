@@ -407,199 +407,112 @@ button { font: inherit; color: inherit; }
 }
 .manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
 /* ============================================================
-   ESCENAS — una por pieza
+   EL ESCENARIO — una sola pantalla para toda la colección
 
-   Cada pieza ocupa su propia pantalla fijada mientras el scroll
-   la atraviesa. El JS escribe --p (0 a 1) por escena; de ahí sale
-   todo: escala, giro, entrada, revelado de la ficha.
+   Antes cada pieza tenía su propia escena y, al terminar, se iba
+   hacia arriba. Ese desplazamiento vertical es justo lo que se
+   siente como "estoy bajando".
 
-   Los cuatro ritmos hacen que ninguna pieza entre igual que la
-   anterior. Es la instrucción del encargo —micro-dirección propia
-   por producto— resuelta sin escribir cada una a mano.
+   Ahora hay un solo escenario fijo y las piezas no viajan: llegan
+   desde el fondo, ocupan el centro y siguen de largo hacia quien
+   mira. Nada se mueve en vertical, nunca. El scroll deja de leerse
+   como bajar y pasa a leerse como avanzar por una sala.
+
+   El JS escribe dos números por pieza:
+     --t  posición con signo. -1 viene llegando, 0 centrada, +1 ya
+          pasó de largo.
+     --a  la misma distancia sin signo, para lo que no distingue
+          lado (opacidad, desenfoque).
    ============================================================ */
 
 .piezas { position: relative; }
 
-.escena {
-  position: relative;
-  min-height: 260vh;
-  /* Sitio reservado abajo para la ficha. La lámina se centra en lo
-     que queda por encima, así que nunca se le monta ni la empuja
-     fuera de la pantalla. */
-  --reserva: 190px;
-}
-
-.escena__stage {
-  position: sticky; top: 0;
+.escenario {
+  position: sticky;
+  top: 0;
   height: 100svh;
   overflow: hidden;
-  display: grid;
-  place-items: center;
-  padding: calc(var(--nav) + var(--s6)) var(--margen) var(--reserva);
+  perspective: 1600px;
 }
 
-/* El numeral: enorme, detrás de todo, a otro ritmo. Convierte
-   "otro producto" en PIEZA 03. */
-.escena__numeral {
+.pieza {
   position: absolute;
-  left: 50%; top: 50%;
-  z-index: 0;
-  font-family: var(--serif); font-weight: 300;
-  font-size: clamp(14rem, 42vw, 34rem);
-  line-height: 0.72; letter-spacing: -0.06em;
-  color: var(--noche);
-  opacity: 0.08;
-  white-space: nowrap;
-  pointer-events: none; user-select: none;
-  /* skill: css-alpha-masking. El numeral es más ancho que la
-     ventana; cortado a hueso parece un error de recorte, y con el
-     borde desvanecido parece que sigue detrás. */
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  transform:
-    translate3d(calc(-50% + (0.5 - var(--p, 0)) * 26vw), -50%, 0)
-    scale(calc(0.9 + var(--p, 0) * 0.25));
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  justify-items: center;
+  padding: calc(var(--nav) + var(--s6)) var(--margen) var(--s7);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  /* La caída es casi lineal a propósito: en el punto medio entre
+     dos piezas las dos están al 42%, así que el relevo se lee como
+     una disolvencia y no como un parpadeo con la pantalla vacía en
+     medio. Con una caída más brusca ese hueco aparecía. */
+  opacity: clamp(0, calc(1 - var(--a, 1) * 1.15), 1);
+  pointer-events: none;
+  will-change: opacity;
 }
+.pieza.activa { pointer-events: auto; }
 
-/* La lámina: el objeto. Llega lejos y pequeña; el scroll la trae
-   encima. */
-/* La lámina se mide por ALTO, no por ancho.
-
-   Es más alta que ancha (4:5), así que en una ventana baja y ancha
-   —un portátil normal— el ancho sobra y el alto no: dimensionarla
-   por ancho la hacía salirse por abajo y cortarse. Acá se toma el
-   menor de tres límites (lo que cabe de alto, lo que cabe de ancho,
-   y un techo), y el ancho sale solo de la proporción. */
-.escena__plato {
+/* La lámina es lo único que se mueve, y se mueve en profundidad.
+   Viene de lejos, se planta, y sigue de largo hacia el frente. */
+.pieza__lamina {
   position: relative;
-  z-index: 1;
+  display: block;
   height: min(
-    calc(100svh - var(--nav) - var(--s6) - var(--reserva) - var(--s6)),
+    calc(100svh - var(--nav) - var(--s6) - 190px - var(--s6)),
     calc(70vw * 1.25),
     520px
   );
   width: auto;
   aspect-ratio: 4 / 5;
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  color: inherit;
-  will-change: transform;
-  --mx: 0;
-}
-
-/* --- ritmo 0: llega de la izquierda, girando --- */
-.escena[data-ritmo="0"] .escena__plato {
-  transform:
-    translate3d(calc((var(--p, 0) - 0.5) * 14vw), 0, 0)
-    scale(calc(0.52 + var(--p, 0) * 0.48))
-    rotate(calc((1 - var(--p, 0)) * -5deg));
-}
-/* --- ritmo 1: llega de la derecha y desde el fondo --- */
-.escena[data-ritmo="1"] .escena__plato {
-  transform:
-    perspective(1400px)
-    translate3d(calc((0.5 - var(--p, 0)) * 16vw), 0, calc((var(--p, 0) - 1) * 260px))
-    rotateY(calc((1 - var(--p, 0)) * 14deg));
-}
-/* --- ritmo 2: sube desde abajo, creciendo mucho --- */
-.escena[data-ritmo="2"] .escena__plato {
-  transform:
-    translate3d(0, calc((1 - var(--p, 0)) * 16vh), 0)
-    scale(calc(0.4 + var(--p, 0) * 0.6));
-}
-/* --- ritmo 3: atraviesa el plano y se endereza al final --- */
-.escena[data-ritmo="3"] .escena__plato {
-  transform:
-    perspective(1200px)
-    translate3d(calc((var(--p, 0) - 0.5) * -10vw), 0, 0)
-    rotateX(calc((1 - var(--p, 0)) * 16deg))
-    rotate(calc((1 - var(--p, 0)) * 4deg))
-    scale(calc(0.55 + var(--p, 0) * 0.45));
-}
-
-/* Reacción al puntero: un reflejo que se inclina. Leve a
-   propósito; esto es dirección de arte, no un videojuego. */
-@media (hover: hover) and (pointer: fine) {
-  .escena__plato::after {
-    content: "";
-    position: absolute; inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(
-      calc(var(--mx) * 80deg + 110deg),
-      rgba(255, 255, 255, 0.3),
-      rgba(255, 255, 255, 0) 58%);
-    opacity: calc(var(--p, 0) * 0.85);
-  }
-}
-
-/* Nada de la escena se ve antes de que su recorrido empiece.
-
-   Con la lámina siempre visible se la veía llegar ya formada
-   —pequeña y ladeada— y quedarse esperando a que el scroll la
-   alcanzara. Ahora entra con su propio --p: a 0 no está, y a 0.2
-   ya está entera, así que aparece justo cuando empieza a moverse.
-
-   Va colgado de .anima igual que el resto: sin esa clase —sin
-   JavaScript, o con la página en segundo plano— las láminas se ven
-   siempre. Ninguna pieza puede depender de que corra un script
-   para existir. */
-.anima .escena__plato   { opacity: clamp(0, calc(var(--p, 0) * 5), 1); }
-.anima .escena__numeral { opacity: calc(var(--p, 0) * 0.09); }
-
-.plato__medio {
-  position: absolute; inset: 0;
   overflow: hidden;
   background: var(--arena);
   border: 1px solid var(--linea);
+  transform: translate3d(0, 0, calc(var(--t, 0) * 460px));
+  will-change: transform;
 }
-.plato__medio img { width: 100%; height: 100%; object-fit: cover; }
+.pieza__lamina img { width: 100%; height: 100%; object-fit: cover; }
 
-/* La lámina sin fotografía.
-
-   Hoy el catálogo no tiene fotos. Un hueco gris diría "falta
-   contenido", que es justo lo que este encargo prohíbe. Así que
-   la ausencia se diseña: un tejido dibujado, la inicial calada
-   encima y el aviso en letra chica. Cuando entre la fotografía,
-   esto desaparece solo. */
-/* Aviso de foto de muestra. Va sobre fotografía, así que necesita
-   su propio fondo para leerse. Pequeño y en una esquina: tiene que
-   ser honesto, no un cartel. */
-.plato__falta {
-  position: absolute; left: var(--s3); bottom: var(--s3);
-  z-index: 2;
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--tinta-70);
-  background: rgba(255, 253, 255, 0.86);
-  border: 1px solid var(--linea);
-  padding: 3px 8px;
-}
-
-/* Ficha de escena: aparece en el último tercio, cuando la pieza
-   ya tiene el protagonismo. */
-.escena__ficha {
+/* El numeral acompaña a su pieza y se desplaza de lado, no de
+   arriba abajo. */
+.pieza__numeral {
   position: absolute;
-  left: var(--margen); right: var(--margen);
-  bottom: var(--s7);
-  z-index: 3;
+  left: 50%; top: 50%;
+  z-index: -1;
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(14rem, 42vw, 34rem);
+  line-height: 0.72; letter-spacing: -0.06em;
+  color: var(--noche);
+  opacity: 0.07;
+  white-space: nowrap;
+  pointer-events: none; user-select: none;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  transform: translate3d(calc(-50% + var(--t, 0) * 18vw), -50%, 0);
+}
+
+/* La ficha se queda quieta abajo. El texto no viaja: solo cambia
+   cuál es el que está. */
+.pieza__ficha {
+  align-self: end;
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--s5);
-  pointer-events: none;
-  opacity: clamp(0, calc((var(--p, 0) - 0.5) * 3.2), 1);
-  transform: translate3d(0, calc((1 - clamp(0, (var(--p, 0) - 0.5) * 3.2, 1)) * 24px), 0);
 }
-.escena__ficha > * { pointer-events: auto; }
 
 .ficha__id {
   font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--tinta-45); margin: 0 0 var(--s2);
+  display: block;
 }
 .ficha__nombre {
   font-family: var(--serif); font-weight: 300;
@@ -607,6 +520,7 @@ button { font: inherit; color: inherit; }
   line-height: 1.02; letter-spacing: -0.025em;
   color: var(--noche); margin: 0;
   max-width: 16ch;
+  display: block;
 }
 .ficha__derecha { display: grid; gap: var(--s3); justify-items: end; text-align: right; }
 .ficha__precio {
@@ -615,8 +529,6 @@ button { font: inherit; color: inherit; }
 }
 .ficha__precio del { opacity: 0.45; margin-left: var(--s3); }
 
-/* Disponibilidad como dato de colección, no como alarma. Es el
-   número real de piezas que existen: no hay urgencia inventada. */
 .ficha__rareza {
   display: flex; align-items: baseline; gap: var(--s2);
   font-family: var(--mono); font-size: 10px;
@@ -630,11 +542,37 @@ button { font: inherit; color: inherit; }
 }
 .rareza--no, .rareza--no b { color: var(--rosa-texto); }
 
+/* Reflejo que sigue al puntero. */
+@media (hover: hover) and (pointer: fine) {
+  .pieza__lamina::after {
+    content: "";
+    position: absolute; inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      calc(var(--mx, 0) * 80deg + 110deg),
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0) 58%);
+  }
+}
+
+.plato__falta {
+  position: absolute; left: var(--s3); bottom: var(--s3);
+  z-index: 3;
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--tinta-70);
+  background: rgba(255, 253, 255, 0.86);
+  border: 1px solid var(--linea);
+  padding: 3px 8px;
+}
+
 @media (max-width: 760px) {
-  /* En móvil la ficha se apila en dos filas y ocupa más. */
-  .escena { min-height: 210vh; --reserva: 230px; }
-  .escena__plato { height: min(calc(100svh - var(--nav) - var(--s6) - var(--reserva) - var(--s6)), calc(84vw * 1.25), 420px); }
-  .escena__ficha { flex-direction: column; align-items: flex-start; gap: var(--s3); }
+  .pieza { padding: calc(var(--nav) + var(--s6)) var(--margen) var(--s6); }
+  .pieza__lamina {
+    height: min(calc(100svh - var(--nav) - var(--s6) - 230px - var(--s6)), calc(84vw * 1.25), 420px);
+  }
+  .pieza__ficha { flex-direction: column; align-items: flex-start; gap: var(--s3); }
   .ficha__derecha { justify-items: start; text-align: left; }
 }
 
@@ -845,18 +783,17 @@ button { font: inherit; color: inherit; }
   .desenfoque { display: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
-  .escena { min-height: 0; }
-  .escena__stage {
-    position: static; height: auto;
+  .piezas { height: auto !important; }
+  .escenario { position: static; height: auto; overflow: visible; perspective: none; }
+  .pieza {
+    position: static; inset: auto;
+    opacity: 1 !important; pointer-events: auto;
+    display: block;
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  .escena__plato { transform: none !important; opacity: 1 !important; height: auto; width: min(88vw, 460px); }
-  .escena__plato::after { display: none; }
-  .escena__numeral { display: none; }
-  .escena__ficha {
-    position: static; opacity: 1; transform: none;
-    left: auto; right: auto; bottom: auto;
-    margin-top: var(--s6);
-  }
+  .pieza__lamina { transform: none !important; height: auto; width: min(88vw, 460px); }
+  .pieza__lamina::after { display: none; }
+  .pieza__numeral { display: none; }
+  .pieza__ficha { margin-top: var(--s6); }
 }

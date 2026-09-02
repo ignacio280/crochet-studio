@@ -173,10 +173,15 @@
      por producto que pide el encargo, sin escribir cada una a
      mano. */
 
+  // Las destacadas primero: la colección se abre por su cara.
+  function ordenadas() {
+    return estado.productos.slice().sort(function (a, b) {
+      return (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0);
+    });
+  }
+
   function pintarEscenas() {
-    var lista = estado.productos.slice();
-    // Las destacadas primero: la colección se abre por su cara.
-    lista.sort(function (a, b) { return (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0); });
+    var lista = ordenadas();
 
     if (!lista.length) {
       $('piezas').innerHTML = '<div class="vacio"><p>El telar está vacío por ahora.</p>' +
@@ -186,7 +191,7 @@
     }
 
     var total = lista.length;
-    $('piezas').innerHTML = lista.map(function (p, i) {
+    var piezas = lista.map(function (p, i) {
       var n = i + 1;
       var est = estadoDe(p);
       var precios = precio(p.precio);
@@ -194,65 +199,100 @@
         precios += '<del>' + precio(p.precioAntes) + '</del>';
       }
 
-      return '<section class="escena" data-ritmo="' + (i % 4) + '" data-id="' + escapar(p.id) + '">' +
-        '<div class="escena__stage">' +
-          '<span class="escena__numeral" aria-hidden="true">' + nn(n) + '</span>' +
-          '<button class="escena__plato" data-cursor="ver" data-abrir="' + escapar(p.id) + '" ' +
-                  'aria-label="Ver ' + escapar(p.nombre) + '">' +
-            '<span class="plato__medio">' + lamina(p, i === 0, i) + '</span>' +
-          '</button>' +
-          '<div class="escena__ficha">' +
-            '<div>' +
-              '<p class="ficha__id">Pieza ' + nn(n) + ' / ' + nn(total) + ' · ' + escapar(p.categoria || 'Sin categoría') + '</p>' +
-              '<h2 class="ficha__nombre">' + escapar(p.nombre) + '</h2>' +
-            '</div>' +
-            '<div class="ficha__derecha">' +
-              '<div class="ficha__precio">' + precios + '</div>' +
-              '<div class="ficha__rareza ' + est.clase + '"><b>' + nn(n) + '</b><span>' + est.texto + '</span></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</section>';
+      return '<button class="pieza" data-i="' + i + '" data-abrir="' + escapar(p.id) + '" ' +
+                     'data-cursor="ver" aria-label="Ver ' + escapar(p.nombre) + '">' +
+        '<span class="pieza__numeral" aria-hidden="true">' + nn(n) + '</span>' +
+        '<span class="pieza__lamina">' + lamina(p, i === 0, i) + '</span>' +
+        '<span class="pieza__ficha">' +
+          '<span>' +
+            '<span class="ficha__id">Pieza ' + nn(n) + ' / ' + nn(total) + ' · ' + escapar(p.categoria || 'Sin categoría') + '</span>' +
+            '<span class="ficha__nombre">' + escapar(p.nombre) + '</span>' +
+          '</span>' +
+          '<span class="ficha__derecha">' +
+            '<span class="ficha__precio">' + precios + '</span>' +
+            '<span class="ficha__rareza ' + est.clase + '"><b>' + nn(n) + '</b><span>' + est.texto + '</span></span>' +
+          '</span>' +
+        '</span>' +
+      '</button>';
     }).join('');
 
-    medirEscenas();
+    $('piezas').innerHTML = '<div class="escenario">' + piezas + '</div>';
+    medirEscenario();
   }
 
   /* ---------------- El recorrido ----------------
 
-     Un solo bucle. Mide el avance de la página, la velocidad del
-     scroll y el progreso de cada escena a la vista, y escribe esos
-     tres números. Nada más. */
+     Un solo bucle. Traduce la posición del scroll a una posición
+     en la colección —un número decimal: 2.4 es "entre la tercera y
+     la cuarta"— y de ahí saca los dos números de cada pieza.
 
-  var escenas = [];
+     Ninguna pieza se desplaza en vertical. Por eso el scroll no se
+     siente como bajar. */
 
-  function medirEscenas() {
-    escenas = [].slice.call(document.querySelectorAll('.escena')).map(function (el) {
-      var caja = el.getBoundingClientRect();
-      return {
-        el: el,
-        inicio: caja.top + window.pageYOffset,
-        recorrido: Math.max(1, el.offsetHeight - window.innerHeight),
-        p: -1
-      };
-    });
+  var esc = { activo: false, inicio: 0, alto: 1, n: 0, nodos: [], actual: -1 };
 
+  // Cuánto scroll ocupa pasar de una pieza a la siguiente.
+  var PASO = 0.9;   // en pantallas
+
+  function medirEscenario() {
+    var cont = $('piezas');
+    esc.nodos = [].slice.call(cont.querySelectorAll('.pieza'));
+    esc.n = esc.nodos.length;
+
+    if (!esc.n || quieto.matches) {
+      cont.style.height = '';
+      esc.activo = false;
+      return;
+    }
+
+    // Una pantalla para el escenario, más un paso por cada salto.
+    cont.style.height = (window.innerHeight * (1 + (esc.n - 1) * PASO)) + 'px';
+
+    var caja = cont.getBoundingClientRect();
+    esc.inicio = caja.top + window.pageYOffset;
+    esc.alto = Math.max(1, cont.offsetHeight - window.innerHeight);
+    esc.activo = true;
     recorrer();
   }
 
   function recorrer() {
-    var y = window.pageYOffset;
-    var margen = window.innerHeight * 1.2;
-    for (var i = 0; i < escenas.length; i++) {
-      var e = escenas[i];
-      if (e.inicio - y > margen || e.inicio + e.el.offsetHeight - y < -margen) continue;
-      var p = (y - e.inicio) / e.recorrido;
-      p = Math.min(1, Math.max(0, p));
-      if (Math.abs(p - e.p) < 0.002) continue;
-      e.p = p;
-      e.el.style.setProperty('--p', p.toFixed(4));
+    if (!esc.activo) return;
+
+    var avance = (window.pageYOffset - esc.inicio) / esc.alto;
+    avance = Math.min(1, Math.max(0, avance));
+
+    // Posición dentro de la colección: 0 es la primera centrada,
+    // n-1 la última.
+    var pos = avance * (esc.n - 1);
+    var cerca = Math.round(pos);
+
+    for (var i = 0; i < esc.n; i++) {
+      var t = pos - i;                 // <0 viene llegando, >0 ya pasó
+      var a = t < 0 ? -t : t;
+      var nodo = esc.nodos[i];
+      // Fuera de rango no se toca: no hay nada que pintar.
+      if (a > 1.2) {
+        if (nodo._t !== 9) { nodo.style.setProperty('--a', 1.4); nodo._t = 9; }
+        continue;
+      }
+      if (nodo._t !== undefined && Math.abs(nodo._t - t) < 0.002) continue;
+      nodo._t = t;
+      nodo.style.setProperty('--t', t.toFixed(4));
+      nodo.style.setProperty('--a', a.toFixed(4));
+    }
+
+    // Solo la pieza del centro recibe clics.
+    if (cerca !== esc.actual) {
+      if (esc.nodos[esc.actual]) esc.nodos[esc.actual].classList.remove('activa');
+      if (esc.nodos[cerca]) esc.nodos[cerca].classList.add('activa');
+      esc.actual = cerca;
     }
   }
+
+  /* ---------------- Vigilancia del scroll ----------------
+
+     Un solo oyente para toda la página, y un cuadro por evento.
+     Ni el escenario ni la cabecera piden el suyo por separado. */
 
   function vigilarScroll() {
     var cab = document.querySelector('.cabecera');
@@ -275,9 +315,12 @@
     var reMedir;
     addEventListener('resize', function () {
       clearTimeout(reMedir);
-      reMedir = setTimeout(medirEscenas, 180);
+      reMedir = setTimeout(medirEscenario, 180);
     });
-    addEventListener('load', medirEscenas);
+
+    // Las fotos entran tarde y cambian el alto de la lámina: hay
+    // que volver a medir cuando terminan de cargar.
+    addEventListener('load', medirEscenario);
 
     marco();
   }
@@ -312,7 +355,7 @@
       cursor.classList.toggle('tiene-texto', !!rotulo);
 
       // La lámina se inclina un poco hacia el puntero.
-      var plato = e.target.closest ? e.target.closest('.escena__plato') : null;
+      var plato = e.target.closest ? e.target.closest('.pieza__lamina') : null;
       if (plato) {
         var c = plato.getBoundingClientRect();
         plato.style.setProperty('--mx', (((e.clientX - c.left) / c.width) - 0.5).toFixed(3));
@@ -345,9 +388,7 @@
   }
 
   function abrirUniverso(id, desde) {
-    var lista = estado.productos.slice().sort(function (a, b) {
-      return (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0);
-    });
+    var lista = ordenadas();
     var i = lista.findIndex(function (x) { return x.id === id; });
     if (i === -1) return;
     var p = lista[i];
