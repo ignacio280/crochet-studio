@@ -406,7 +406,7 @@ button { font: inherit; color: inherit; }
   font-size: clamp(14rem, 42vw, 34rem);
   line-height: 0.72; letter-spacing: -0.06em;
   color: var(--noche);
-  opacity: calc(0.05 + var(--p, 0) * 0.03);
+  opacity: 0.08;
   white-space: nowrap;
   pointer-events: none; user-select: none;
   transform:
@@ -487,6 +487,20 @@ button { font: inherit; color: inherit; }
     opacity: calc(var(--p, 0) * 0.85);
   }
 }
+
+/* Nada de la escena se ve antes de que su recorrido empiece.
+
+   Con la lámina siempre visible se la veía llegar ya formada
+   —pequeña y ladeada— y quedarse esperando a que el scroll la
+   alcanzara. Ahora entra con su propio --p: a 0 no está, y a 0.2
+   ya está entera, así que aparece justo cuando empieza a moverse.
+
+   Va colgado de .anima igual que el resto: sin esa clase —sin
+   JavaScript, o con la página en segundo plano— las láminas se ven
+   siempre. Ninguna pieza puede depender de que corra un script
+   para existir. */
+.anima .escena__plato   { opacity: clamp(0, calc(var(--p, 0) * 5), 1); }
+.anima .escena__numeral { opacity: calc(var(--p, 0) * 0.09); }
 
 .plato__medio {
   position: absolute; inset: 0;
@@ -789,7 +803,7 @@ button { font: inherit; color: inherit; }
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  .escena__plato { transform: none !important; height: auto; width: min(88vw, 460px); }
+  .escena__plato { transform: none !important; opacity: 1 !important; height: auto; width: min(88vw, 460px); }
   .escena__plato::after { display: none; }
   .escena__numeral { display: none; }
   .escena__ficha {
