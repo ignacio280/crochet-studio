@@ -378,7 +378,14 @@ button { font: inherit; color: inherit; }
 
 .piezas { position: relative; }
 
-.escena { position: relative; min-height: 260vh; }
+.escena {
+  position: relative;
+  min-height: 260vh;
+  /* Sitio reservado abajo para la ficha. La lámina se centra en lo
+     que queda por encima, así que nunca se le monta ni la empuja
+     fuera de la pantalla. */
+  --reserva: 190px;
+}
 
 .escena__stage {
   position: sticky; top: 0;
@@ -386,7 +393,7 @@ button { font: inherit; color: inherit; }
   overflow: hidden;
   display: grid;
   place-items: center;
-  padding: calc(var(--nav) + var(--s6)) var(--margen) var(--s7);
+  padding: calc(var(--nav) + var(--s6)) var(--margen) var(--reserva);
 }
 
 /* El numeral: enorme, detrás de todo, a otro ritmo. Convierte
@@ -409,10 +416,22 @@ button { font: inherit; color: inherit; }
 
 /* La lámina: el objeto. Llega lejos y pequeña; el scroll la trae
    encima. */
+/* La lámina se mide por ALTO, no por ancho.
+
+   Es más alta que ancha (4:5), así que en una ventana baja y ancha
+   —un portátil normal— el ancho sobra y el alto no: dimensionarla
+   por ancho la hacía salirse por abajo y cortarse. Acá se toma el
+   menor de tres límites (lo que cabe de alto, lo que cabe de ancho,
+   y un techo), y el ancho sale solo de la proporción. */
 .escena__plato {
   position: relative;
   z-index: 1;
-  width: min(74vw, 520px);
+  height: min(
+    calc(100svh - var(--nav) - var(--s6) - var(--reserva) - var(--s6)),
+    calc(70vw * 1.25),
+    520px
+  );
+  width: auto;
   aspect-ratio: 4 / 5;
   background: none;
   border: 0;
@@ -441,7 +460,7 @@ button { font: inherit; color: inherit; }
 .escena[data-ritmo="2"] .escena__plato {
   transform:
     translate3d(0, calc((1 - var(--p, 0)) * 16vh), 0)
-    scale(calc(0.4 + var(--p, 0) * 0.66));
+    scale(calc(0.4 + var(--p, 0) * 0.6));
 }
 /* --- ritmo 3: atraviesa el plano y se endereza al final --- */
 .escena[data-ritmo="3"] .escena__plato {
@@ -559,8 +578,9 @@ button { font: inherit; color: inherit; }
 .rareza--no, .rareza--no b { color: var(--rosa-texto); }
 
 @media (max-width: 760px) {
-  .escena { min-height: 210vh; }
-  .escena__plato { width: min(84vw, 400px); }
+  /* En móvil la ficha se apila en dos filas y ocupa más. */
+  .escena { min-height: 210vh; --reserva: 230px; }
+  .escena__plato { height: min(calc(100svh - var(--nav) - var(--s6) - var(--reserva) - var(--s6)), calc(84vw * 1.25), 420px); }
   .escena__ficha { flex-direction: column; align-items: flex-start; gap: var(--s3); }
   .ficha__derecha { justify-items: start; text-align: left; }
 }
@@ -769,7 +789,7 @@ button { font: inherit; color: inherit; }
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  .escena__plato { transform: none !important; width: min(88vw, 520px); }
+  .escena__plato { transform: none !important; height: auto; width: min(88vw, 460px); }
   .escena__plato::after { display: none; }
   .escena__numeral { display: none; }
   .escena__ficha {
