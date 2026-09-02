@@ -131,35 +131,6 @@ button { font: inherit; color: inherit; }
 .saltar-al-contenido:focus { left: var(--s4); top: var(--s4); }
 
 /* ============================================================
-   GUÍAS DEL CONTENEDOR  (skill: container-lines)
-
-   Dos líneas de 1px en los bordes exactos del contenedor, fijas y
-   detrás de todo. No decoran: dan la tensión estructural que hace
-   que una página con mucho aire se lea medida en vez de vacía. El
-   ancho lo comparten con .contenedor, que es la regla que la skill
-   marca como no negociable.
-   ============================================================ */
-
-.guias {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-.guias::before,
-.guias::after {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 1px;
-  background: var(--linea);
-}
-.guias::before { left: max(var(--margen), calc((100vw - var(--ancho)) / 2)); }
-.guias::after  { right: max(var(--margen), calc((100vw - var(--ancho)) / 2)); }
-
-@media (max-width: 620px) { .guias { display: none; } }
-
-/* ============================================================
    CURSOR
 
    Cambia según lo que hay debajo. Es lenguaje visual, no juguete:
@@ -466,24 +437,6 @@ button { font: inherit; color: inherit; }
   place-items: center;
   padding: calc(var(--nav) + var(--s6)) var(--margen) var(--reserva);
 }
-
-/* Marcas de esquina donde el contenedor cruza cada escena. La
-   skill pide de 4 a 8px y exactas sobre esquinas reales; van solo
-   arriba, que es donde la escena empieza. */
-.escena__stage::before,
-.escena__stage::after {
-  content: "";
-  position: absolute;
-  top: calc(var(--nav) + var(--s6));
-  width: 5px; height: 5px;
-  background: var(--linea-fuerte);
-  pointer-events: none;
-  z-index: 0;
-  opacity: clamp(0, calc(var(--p, 0) * 4), 1);
-}
-.escena__stage::before { left: max(var(--margen), calc((100vw - var(--ancho)) / 2)); transform: translate(-50%, -50%); }
-.escena__stage::after  { right: max(var(--margen), calc((100vw - var(--ancho)) / 2)); transform: translate(50%, -50%); }
-@media (max-width: 620px) { .escena__stage::before, .escena__stage::after { display: none; } }
 
 /* El numeral: enorme, detrás de todo, a otro ritmo. Convierte
    "otro producto" en PIEZA 03. */
