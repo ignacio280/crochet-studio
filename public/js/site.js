@@ -270,11 +270,21 @@
       var t = pos - i;                 // <0 viene llegando, >0 ya pasó
       var a = t < 0 ? -t : t;
       var nodo = esc.nodos[i];
-      // Fuera de rango no se toca: no hay nada que pintar.
-      if (a > 1.2) {
-        if (nodo._t !== 9) { nodo.style.setProperty('--a', 1.4); nodo._t = 9; }
+
+      // Fuera del relevo no se pinta. Un elemento invisible se
+      // sigue componiendo, y acá cada lámina lleva un desenfoque:
+      // componer un blur que nadie ve es trabajo regalado en cada
+      // cuadro.
+      var fuera = a > 0.92;
+      if (nodo._fuera !== fuera) {
+        nodo.classList.toggle('fuera', fuera);
+        nodo._fuera = fuera;
+      }
+      if (fuera) {
+        if (nodo._t !== 9) { nodo.style.setProperty('--a', 1); nodo._t = 9; }
         continue;
       }
+
       if (nodo._t !== undefined && Math.abs(nodo._t - t) < 0.002) continue;
       nodo._t = t;
       nodo.style.setProperty('--t', t.toFixed(4));

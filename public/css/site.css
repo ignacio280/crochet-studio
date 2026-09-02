@@ -458,8 +458,27 @@ button { font: inherit; color: inherit; }
 }
 .pieza.activa { pointer-events: auto; }
 
-/* La lámina es lo único que se mueve, y se mueve en profundidad.
-   Viene de lejos, se planta, y sigue de largo hacia el frente. */
+/* El relevo.
+
+   Un fundido de opacidad no es una transición: es la ausencia de
+   una. Acá la pieza hace un recorrido completo y legible —llega,
+   se planta, se va— y en ningún momento sube ni baja.
+
+   Cuatro cosas a la vez, todas colgadas del mismo --t:
+
+   1. DESPLAZAMIENTO LATERAL. Entra por la izquierda, sale por la
+      derecha. Da dirección: se siente un flujo, no un parpadeo.
+   2. PROFUNDIDAD. Llega de lejos y sale de cerca, pasando por
+      delante de quien mira.
+   3. GIRO EN PERSPECTIVA. Llega de canto y se endereza al centro.
+      Es lo que convierte el movimiento en algo con volumen.
+   4. ENFOQUE. Desenfocada de lejos, nítida en el centro. El
+      desenfoque va al cuadrado: nulo cerca del centro y fuerte en
+      los extremos, así el foco "cae" en la pieza en vez de subir
+      linealmente.
+
+   El giro cambia de signo y de magnitud según la posición en la
+   colección, para que dos relevos seguidos no sean el mismo. */
 .pieza__lamina {
   position: relative;
   display: block;
@@ -473,10 +492,32 @@ button { font: inherit; color: inherit; }
   overflow: hidden;
   background: var(--arena);
   border: 1px solid var(--linea);
-  transform: translate3d(0, 0, calc(var(--t, 0) * 460px));
-  will-change: transform;
+  --giro: 4;
+  transform:
+    translate3d(calc(var(--t, 0) * 32vw), 0, calc(var(--t, 0) * 420px))
+    rotateY(calc(var(--t, 0) * -24deg))
+    rotate(calc(var(--t, 0) * var(--giro) * 1deg));
+  filter: blur(calc(var(--a, 0) * var(--a, 0) * 13px));
+  will-change: transform, filter;
 }
-.pieza__lamina img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Ni el mismo giro dos veces seguidas. */
+.pieza:nth-child(4n+2) .pieza__lamina { --giro: -6; }
+.pieza:nth-child(4n+3) .pieza__lamina { --giro: 7; }
+.pieza:nth-child(4n+4) .pieza__lamina { --giro: -3; }
+
+/* La foto se mueve un poco dentro de su marco: paralaje interna.
+   Es lo que evita que la lámina se lea como una calcomanía plana
+   viajando por la pantalla. */
+.pieza__lamina img {
+  width: 100%; height: 100%; object-fit: cover;
+  transform: scale(calc(1 + var(--a, 0) * 0.14));
+}
+
+/* Fuera de rango no se pinta. Un elemento en opacity 0 se sigue
+   componiendo, y componer un desenfoque que nadie ve es regalar
+   trabajo a la GPU en cada cuadro. */
+.pieza.fuera { visibility: hidden; }
 
 /* El numeral acompaña a su pieza y se desplaza de lado, no de
    arriba abajo. */
@@ -501,6 +542,20 @@ button { font: inherit; color: inherit; }
 .pieza__ficha {
   align-self: end;
   width: 100%;
+  /* Acompaña el flujo a un cuarto de la velocidad: se nota que va
+     con su pieza, pero el texto no sale volando. */
+  transform: translate3d(calc(var(--t, 0) * 8vw), 0, 0);
+  /* Y se apaga mucho antes que la lámina.
+
+     Dos imágenes pueden cruzarse a media opacidad y se lee como
+     una disolvencia. Dos textos a media opacidad, en el mismo
+     sitio, se leen como un borrón: en el cruce se veía "Bolso de
+     rafia" impreso encima de "Chaleco de lana gruesa".
+
+     Así el nombre se apaga antes de que llegue el siguiente. Queda
+     un instante sin texto mientras las piezas se cruzan, y eso es
+     correcto: la etiqueta aparece cuando la pieza se planta. */
+  opacity: clamp(0, calc(1.6 - var(--a, 0) * 4), 1);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -792,7 +847,10 @@ button { font: inherit; color: inherit; }
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  .pieza__lamina { transform: none !important; height: auto; width: min(88vw, 460px); }
+  .pieza__lamina { transform: none !important; filter: none !important; height: auto; width: min(88vw, 460px); }
+  .pieza__lamina img { transform: none !important; }
+  .pieza__ficha { transform: none !important; opacity: 1 !important; }
+  .pieza.fuera { visibility: visible; }
   .pieza__lamina::after { display: none; }
   .pieza__numeral { display: none; }
   .pieza__ficha { margin-top: var(--s6); }
