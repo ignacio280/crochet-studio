@@ -6,13 +6,14 @@
   "type": "module",
   "main": "server.js",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "netlify": "netlify dev"
   },
   "dependencies": {
-    "pg": "^8.23.0"
+    "@netlify/blobs": "^11.0.2"
   }
 }

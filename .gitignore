@@ -1,4 +1,4 @@
 node_modules/
-data/store.json
-data/store.json.tmp
+data/
 *.log
+.netlify/

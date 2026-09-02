@@ -1,0 +1,40 @@
+# Despliegue en Netlify.
+#
+# Nada que compilar: public/ se sube tal cual a la CDN y netlify/functions/
+# se empaqueta como funcion. Los datos van a Netlify Blobs, que viene
+# incluido y no hay que configurar: en el plan gratis no hay base de datos,
+# y el disco de una funcion se borra apenas termina de responder.
+
+[build]
+  publish = "public"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+  # La portada se arma en el momento (lleva los metadatos del catalogo
+  # adentro) y el panel se sirve desde la funcion, asi que los dos archivos
+  # tienen que viajar dentro del paquete.
+  included_files = ["views/**", "public/admin.html"]
+
+# Cabeceras de seguridad para lo que sirve la CDN. Lo que sale de la funcion
+# las pone por su cuenta, con la politica de contenido calculada para esa
+# pagina.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+
+# El panel no tiene por que quedar guardado en ningun cache intermedio.
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex"

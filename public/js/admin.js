@@ -594,17 +594,80 @@
 
   /* ================= respaldo ================= */
 
+  // El servidor manda las fotos como direccion, no como bytes: el catalogo
+  // entero con las imagenes adentro no cabe en una sola respuesta. Asi que
+  // el respaldo completo se arma aca, bajando cada foto por su lado. El
+  // archivo que sale sigue siendo uno solo y se basta a si mismo.
+  function aDataUrl(url) {
+    return fetch(url)
+      .then(function (r) {
+        if (!r.ok) throw new Error('No se pudo bajar una de las fotos');
+        return r.blob();
+      })
+      .then(function (b) {
+        return new Promise(function (listo, falla) {
+          var lector = new FileReader();
+          lector.onload = function () { listo(lector.result); };
+          lector.onerror = function () { falla(new Error('No se pudo leer una de las fotos')); };
+          lector.readAsDataURL(b);
+        });
+      });
+  }
+
+  function conFotosAdentro(d) {
+    var tareas = [];
+    if (d.settings && d.settings.heroImagen) {
+      tareas.push(aDataUrl(d.settings.heroImagen).then(function (u) { d.settings.heroImagen = u; }));
+    }
+    (d.productos || []).forEach(function (p) {
+      (p.fotos || []).forEach(function (f, i) {
+        tareas.push(aDataUrl(f).then(function (u) { p.fotos[i] = u; }));
+      });
+    });
+    return Promise.all(tareas).then(function () { return d; });
+  }
+
   $('exportar').addEventListener('click', function () {
-    api('/api/admin/export').then(function (d) {
-      var blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'respaldo-tienda-' + new Date().toISOString().slice(0, 10) + '.json';
-      a.click();
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    }).catch(function (e) { aviso(e.message, true); });
+    var boton = this;
+    boton.disabled = true;
+    aviso('Armando el respaldo...');
+    api('/api/admin/export')
+      .then(conFotosAdentro)
+      .then(function (d) {
+        var blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'respaldo-tienda-' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        aviso('Respaldo listo.');
+      })
+      .catch(function (e) { aviso(e.message, true); })
+      .finally(function () { boton.disabled = false; });
   });
+
+  // El respaldo no se manda de una: primero los textos, y despues los
+  // productos de a uno. Un catalogo con fotos pesa mas de lo que aguanta
+  // una sola peticion, y de a uno tambien se puede mostrar el avance.
+  function cargarRespaldo(respaldo) {
+    var productos = respaldo.productos.slice().reverse();   // el servidor los apila al reves
+    return api('/api/admin/import', {
+      method: 'POST',
+      body: {
+        version: respaldo.version,
+        settings: respaldo.settings || {},
+        categorias: respaldo.categorias || []
+      }
+    }).then(function () {
+      return productos.reduce(function (antes, p, i) {
+        return antes.then(function () {
+          aviso('Cargando respaldo... ' + (i + 1) + ' de ' + productos.length);
+          return api('/api/admin/productos', { method: 'POST', body: p });
+        });
+      }, Promise.resolve());
+    });
+  }
 
   $('importarBoton').addEventListener('click', function () { $('importar').click(); });
 
@@ -621,7 +684,11 @@
         aviso('Ese archivo no es un respaldo válido', true);
         return;
       }
-      api('/api/admin/import', { method: 'POST', body: contenido })
+      if (!contenido || !Array.isArray(contenido.productos)) {
+        aviso('Ese archivo no es un respaldo válido', true);
+        return;
+      }
+      cargarRespaldo(contenido)
         .then(cargar)
         .then(function () { aviso('Respaldo cargado.'); })
         .catch(function (e) { aviso(e.message, true); });
