@@ -18,8 +18,8 @@
   --linea-suave: rgba(85, 66, 122, 0.07);
   --rojo: #b3456a;
 
-  --serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  --sans: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --serif: 'Fraunces', 'Fraunces reserva', Georgia, serif;
+  --sans: 'Quicksand', 'Quicksand reserva', -apple-system, 'Segoe UI', Arial, sans-serif;
 
   --radio: 16px;
   --pastilla: 999px;
