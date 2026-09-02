@@ -6,6 +6,8 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
+  var quieto = matchMedia('(prefers-reduced-motion: reduce)');
+
   function escapar(t) {
     return String(t == null ? '' : t)
       .replace(/&/g, '&amp;')
@@ -35,8 +37,6 @@
     aviso._t = setTimeout(function () { el.classList.remove('visible'); }, 3200);
   }
 
-  // `prioritaria` es para la foto de portada: va arriba del pliegue, así que
-  // cargarla en lazy retrasa justo lo primero que ve la visita.
   function foto(src, alt, prioritaria) {
     if (!src) return '<div class="sin-foto"><span>foto en camino</span></div>';
     var carga = prioritaria
@@ -51,23 +51,43 @@
     return 'https://wa.me/' + num + '?text=' + encodeURIComponent(mensaje);
   }
 
+  /* ---------------- Portada ----------------
+     El nombre llega partido en dos mitades que se juntan en el
+     centro. El servidor ya escribió el nombre entero en el HTML,
+     asi que sin JavaScript se ve igual, solo que quieto. */
+
+  function partirNombre() {
+    var el = $('portadaTitulo');
+    if (!el) return;
+    var texto = (el.textContent || '').trim();
+    if (!texto || quieto.matches) return;
+    var corte = Math.ceil(texto.length / 2);
+    el.innerHTML =
+      '<span class="mitad izq">' + escapar(texto.slice(0, corte)) + '</span>' +
+      '<span class="mitad der">' + escapar(texto.slice(corte)) + '</span>';
+  }
+
   /* ---------------- Textos ---------------- */
 
   function pintarTextos() {
     var s = estado.settings;
     document.title = (s.marca || 'Tienda') + ' — ' + (s.tagline || 'Taller de crochet');
 
-    var marca = escapar(s.marca || 'Tienda');
     $('marca').textContent = s.marca || 'Tienda';
 
     $('anuncio').textContent = s.anuncio || '';
     $('anuncio').style.display = s.anuncio ? '' : 'none';
 
-    $('portadaEtiqueta').textContent = s.tagline || '';
-    $('portadaTitulo').textContent = s.heroTitulo || '';
-    $('portadaBajada').textContent = s.heroTexto || '';
-    $('portadaCta').textContent = s.heroCta || 'Ver la tienda';
-    $('portadaFoto').innerHTML = foto(s.heroImagen, s.marca, true);
+    // La foto de portada pasa a ser el fondo del telón: se ve, pero
+    // no compite con el nombre.
+    if (s.heroImagen) {
+      $('portadaFondo').style.backgroundImage = 'url("' + s.heroImagen.replace(/"/g, '%22') + '")';
+      $('portadaFondo').classList.add('tiene');
+    }
+
+    $('manifiestoTitulo').textContent = s.heroTitulo || '';
+    $('manifiestoTexto').textContent = s.heroTexto || '';
+    $('manifiestoCta').textContent = s.heroCta || 'Ver la tienda';
 
     $('bandaTitulo').textContent = s.bandaTitulo || '';
     $('bandaTexto').textContent = s.bandaTexto || '';
@@ -76,8 +96,9 @@
 
     $('pasosTitulo').textContent = s.pasosTitulo || 'Cómo encargar';
     $('pasosGrid').innerHTML = (s.pasos || []).map(function (p, i) {
+      var n = i + 1;
       return '<div class="paso aparece" style="--i:' + i + '">' +
-        '<div class="paso__numero">' + (i + 1) + '</div>' +
+        '<div class="paso__numero">' + (n < 10 ? '0' + n : n) + '</div>' +
         '<h3 class="paso__titulo">' + escapar(p.titulo) + '</h3>' +
         '<p class="paso__texto">' + escapar(p.texto) + '</p>' +
         '</div>';
@@ -125,6 +146,17 @@
     $('filtros').innerHTML = botones.join('');
   }
 
+  // Cada pieza lleva exactamente un estado, y ese estado es lo único
+  // que usa color: menta si está, rosa si no. Nada más se pinta.
+  function metaDe(p) {
+    var partes = [];
+    if (p.categoria) partes.push(escapar(p.categoria));
+    var clase = p.agotado ? 'estado--no' : 'estado--hay';
+    var texto = p.agotado ? 'Agotado' : 'Disponible';
+    partes.push('<span class="' + clase + '">' + texto + '</span>');
+    return partes.join(' · ');
+  }
+
   function pintarGrid() {
     var lista = estado.productos.filter(function (p) {
       return estado.filtro === 'todo' || p.categoria === estado.filtro;
@@ -135,25 +167,98 @@
       $('grid').innerHTML = '<div class="vacio"><p>Todavía no hay piezas publicadas aquí.</p>' +
         '<p style="margin:0"><a href="' + enlaceWhatsapp('¡Hola! Quiero encargar algo tejido.') +
         '" target="_blank" rel="noopener">Escríbeme y lo tejo para ti</a></p></div>';
+      medirEscenario();
       return;
     }
 
     $('grid').innerHTML = lista.map(function (p, i) {
-      var cinta = '';
-      if (p.agotado) cinta = '<span class="producto__cinta producto__cinta--agotado">Agotado</span>';
-      else if (p.destacado) cinta = '<span class="producto__cinta">Favorito</span>';
-
       var precios = precio(p.precio);
       if (p.precioAntes && p.precioAntes > p.precio) precios += '<del>' + precio(p.precioAntes) + '</del>';
 
-      return '<button class="producto aparece" style="--i:' + (i % 8) + '" data-id="' + escapar(p.id) + '">' +
-        '<div class="producto__foto">' + foto(p.fotos[0], p.nombre) + cinta + '</div>' +
-        '<div class="producto__nombre">' + escapar(p.nombre) + '</div>' +
-        '<div class="producto__precio">' + precios + '</div>' +
+      return '<button class="pieza" data-id="' + escapar(p.id) + '">' +
+        '<span class="pieza__media">' + foto(p.fotos[0], p.nombre, i < 3) + '</span>' +
+        '<span class="pieza__regla"></span>' +
+        '<span class="pieza__fila">' +
+          '<span class="pieza__nombre">' + escapar(p.nombre) + '</span>' +
+          '<span class="pieza__precio">' + precios + '</span>' +
+        '</span>' +
+        '<span class="pieza__meta">' + metaDe(p) + '</span>' +
         '</button>';
     }).join('');
 
-    observarAparicion();
+    medirEscenario();
+  }
+
+  /* ---------------- Galería horizontal ----------------
+
+     El bloque exterior mide una pantalla más el recorrido de la
+     fila; el escenario de dentro se queda pegado. Así el scroll
+     vertical de siempre mueve la fila de lado, sin secuestrar la
+     rueda ni romper el teclado.
+
+     Si no hay ancho, o si el sistema pide menos movimiento, no se
+     enciende: la fila se arrastra a mano y ya está. */
+
+  var esc = { activo: false, inicio: 0, alto: 0, recorrido: 0 };
+
+  // Se suman los hijos en vez de leer offsetLeft del ultimo. La
+  // posicion depende del modo en que este la fila; el ancho de cada
+  // tarjeta, no. Asi se puede medir sin cambiarle el modo, que era
+  // lo que dejaba al navegador recalculando en bucle.
+  function anchoDeFila(track) {
+    var estilo = getComputedStyle(track);
+    var hueco = parseFloat(estilo.columnGap || estilo.gap) || 0;
+    var ancho = (parseFloat(estilo.paddingLeft) || 0) + (parseFloat(estilo.paddingRight) || 0);
+    var hijos = track.children;
+    for (var i = 0; i < hijos.length; i++) {
+      ancho += hijos[i].offsetWidth;
+      if (i) ancho += hueco;
+    }
+    return ancho;
+  }
+
+  function medirEscenario() {
+    var gal = document.querySelector('.gal');
+    var track = $('grid');
+    if (!gal || !track) return;
+    var ghost = gal.querySelector('.gal-ghost');
+
+    var puedo = window.innerWidth >= 861 && !quieto.matches;
+
+    var recorrido = puedo ? Math.max(0, anchoDeFila(track) - window.innerWidth) : 0;
+
+    // Sin ancho que recorrer —o sin permiso— la fila vuelve a ser una
+    // fila que se arrastra a mano.
+    if (!puedo || recorrido < 40) {
+      if (gal.classList.contains('gal--escenario')) gal.classList.remove('gal--escenario');
+      if (gal.style.height) gal.style.height = '';
+      track.style.transform = '';
+      if (ghost) ghost.style.transform = '';
+      esc.activo = false;
+      return;
+    }
+
+    if (!gal.classList.contains('gal--escenario')) gal.classList.add('gal--escenario');
+    var alto = (window.innerHeight + recorrido) + 'px';
+    if (gal.style.height !== alto) gal.style.height = alto;
+
+    var caja = gal.getBoundingClientRect();
+    esc.inicio = caja.top + window.pageYOffset;
+    esc.alto = gal.offsetHeight - window.innerHeight;
+    esc.recorrido = recorrido;
+    esc.activo = true;
+    moverEscenario();
+  }
+
+  function moverEscenario() {
+    if (!esc.activo) return;
+    var track = $('grid');
+    var ghost = document.querySelector('.gal-ghost');
+    var avance = (window.pageYOffset - esc.inicio) / (esc.alto || 1);
+    avance = Math.min(1, Math.max(0, avance));
+    track.style.transform = 'translate3d(' + (-esc.recorrido * avance) + 'px,0,0)';
+    // El fantasma va más lento: es lo que da fondo donde no hay sombras.
+    if (ghost) ghost.style.transform = 'translate(' + (-esc.recorrido * avance * 0.35) + 'px,-50%)';
   }
 
   /* ---------------- Ficha ---------------- */
@@ -163,12 +268,11 @@
     if (!p) return;
     estado.abierto = p;
 
-    $('modalCategoria').textContent = p.categoria || '';
+    $('modalCategoria').innerHTML = metaDe(p);
     $('modalNombre').textContent = p.nombre;
 
     var html = precio(p.precio);
     if (p.precioAntes && p.precioAntes > p.precio) html += '<del>' + precio(p.precioAntes) + '</del>';
-    if (p.agotado) html += ' <span style="font-size:12px;letter-spacing:.16em;text-transform:uppercase">— agotado</span>';
     $('modalPrecio').innerHTML = html;
 
     $('modalDescripcion').textContent = p.descripcion || '';
@@ -259,7 +363,7 @@
     });
 
     $('grid').addEventListener('click', function (e) {
-      var b = e.target.closest('.producto');
+      var b = e.target.closest('.pieza');
       if (b) abrirFicha(b.dataset.id);
     });
 
@@ -289,18 +393,42 @@
         boton.setAttribute('aria-expanded', 'false');
       }
     });
+
+    var reMedir;
+    addEventListener('resize', function () {
+      clearTimeout(reMedir);
+      reMedir = setTimeout(medirEscenario, 160);
+    });
+
+    // Las fotos entran tarde y cambian el ancho de la fila: hay que
+    // volver a medir cuando terminan de cargar.
+    addEventListener('load', medirEscenario);
   }
 
-  function vigilarCabecera() {
+  function vigilarScroll() {
     var cab = document.querySelector('.cabecera');
-    var ultimo = false;
+    var pegadaAntes = false;
+    var pedido = false;
+
+    function marco() {
+      pedido = false;
+      var pegada = window.pageYOffset > 12;
+      if (pegada !== pegadaAntes) { cab.classList.toggle('pegada', pegada); pegadaAntes = pegada; }
+      moverEscenario();
+    }
+
     addEventListener('scroll', function () {
-      var pegada = scrollY > 12;
-      if (pegada !== ultimo) { cab.classList.toggle('pegada', pegada); ultimo = pegada; }
+      if (pedido) return;
+      pedido = true;
+      requestAnimationFrame(marco);
     }, { passive: true });
+
+    marco();
   }
 
   /* ---------------- Arranque ---------------- */
+
+  partirNombre();
 
   fetch('/api/site')
     .then(function (r) { return r.json(); })
@@ -312,7 +440,7 @@
       pintarFiltros();
       pintarGrid();
       conectarEventos();
-      vigilarCabecera();
+      vigilarScroll();
       observarAparicion();
     })
     .catch(function () {
