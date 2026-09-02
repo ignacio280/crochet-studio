@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=IBM+Plex+Mono:wght@400;500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/site.css?v=14">
+<link rel="stylesheet" href="/css/site.css?v=15">
 </head>
 <body>
 
@@ -29,7 +29,6 @@
     <a class="marca" href="#inicio" id="marca" data-cursor="ir">&nbsp;</a>
     <nav class="indice" aria-label="Índice">
       <a href="#piezas" data-cursor="ir">Piezas <span class="cuenta" id="cuentaIndice"></span></a>
-      <a href="#encargo" data-cursor="ir">Encargo</a>
       <a href="#contacto" data-cursor="ir">Contacto</a>
     </nav>
     <button class="menu-boton" id="menuBoton" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuMovil">
@@ -38,7 +37,6 @@
   </div>
   <nav class="menu-movil" id="menuMovil" aria-label="Menú móvil">
     <a href="#piezas">Piezas</a>
-    <a href="#encargo">Encargo</a>
     <a href="#contacto">Contacto</a>
   </nav>
 </header>
@@ -71,20 +69,6 @@
       <p class="etiqueta aparece">El taller</p>
       <h2 class="manifiesto__texto aparece" style="--i:1" id="manifiestoTexto"></h2>
       <p class="manifiesto__nota aparece" style="--i:2" id="manifiestoNota"></p>
-      <div class="manifiesto__pie aparece" style="--i:3">
-        <div class="manifiesto__dato">
-          <p class="etiqueta">Método</p>
-          <span>Una hebra, sin costuras</span>
-        </div>
-        <div class="manifiesto__dato">
-          <p class="etiqueta">Tirada</p>
-          <span id="datoTirada">—</span>
-        </div>
-        <div class="manifiesto__dato">
-          <p class="etiqueta">Encargo</p>
-          <span>Color y talla a pedido</span>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -99,9 +83,6 @@
 <!-- ================= CIERRE ================= -->
 <footer class="cierre" id="contacto">
   <div class="contenedor">
-    <h2 class="cierre__titulo aparece" id="encargo">Cómo encargar</h2>
-    <div class="pasos__grid" id="pasosGrid"></div>
-
     <div class="pie__grid">
       <div>
         <div class="pie__marca" id="pieMarca"></div>
@@ -115,7 +96,6 @@
         <h4>El sitio</h4>
         <ul class="pie__lista">
           <li><a href="#piezas">Piezas</a></li>
-          <li><a href="#encargo">Cómo encargar</a></li>
           <li><a href="/legal.html#terminos">Términos y condiciones</a></li>
           <li><a href="/legal.html#devoluciones">Cambios y devoluciones</a></li>
           <li><a href="/legal.html#privacidad">Privacidad</a></li>
@@ -138,6 +118,6 @@
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
-<script src="/js/site.js?v=10"></script>
+<script src="/js/site.js?v=11"></script>
 </body>
 </html>

@@ -364,14 +364,6 @@ button { font: inherit; color: inherit; }
   white-space: pre-line;
 }
 .manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
-.manifiesto__pie {
-  display: flex; flex-wrap: wrap; gap: var(--s7);
-  margin-top: var(--s8); padding-top: var(--s5);
-  border-top: 1px solid var(--linea);
-}
-.manifiesto__dato { display: grid; gap: var(--s1); min-width: 150px; }
-.manifiesto__dato span { font-size: 0.9375rem; color: var(--tinta); }
-
 /* ============================================================
    ESCENAS — una por pieza
 
@@ -687,18 +679,6 @@ button { font: inherit; color: inherit; }
   position: relative;
   z-index: 2;
 }
-.cierre__titulo { font-size: clamp(1.8rem, 4vw, 3rem); max-width: 18ch; margin-bottom: var(--s7); }
-.pasos__grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  border-top: 1px solid var(--linea);
-  margin-bottom: var(--s9);
-}
-.paso { padding: var(--s6) var(--s5) var(--s6) 0; border-bottom: 1px solid var(--linea); }
-@media (min-width: 861px) { .paso + .paso { border-left: 1px solid var(--linea); padding-left: var(--s5); } }
-.paso__numero { font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.13em; color: var(--tinta-45); margin-bottom: var(--s3); }
-.paso__titulo { font-family: var(--sans); font-weight: 600; font-size: 1.0625rem; margin: 0 0 var(--s2); }
-.paso__texto { color: var(--tinta-70); font-size: 0.9375rem; margin: 0; }
-
 .pie__grid {
   display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 3fr) minmax(0, 3fr);
   gap: var(--s7); margin-bottom: var(--s8);

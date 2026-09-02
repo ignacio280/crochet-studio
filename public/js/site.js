@@ -83,18 +83,9 @@
     $('umbralCuenta').textContent = nn(total);
     $('umbralCuentaTexto').textContent = total === 1 ? 'pieza en la colección' : 'piezas en la colección';
     $('cuentaIndice').textContent = '(' + nn(total) + ')';
-    $('datoTirada').textContent = total + (total === 1 ? ' pieza única' : ' piezas únicas');
 
     $('manifiestoTexto').textContent = s.heroTitulo || '';
     $('manifiestoNota').textContent = s.heroTexto || '';
-
-    $('pasosGrid').innerHTML = (s.pasos || []).map(function (p, i) {
-      return '<div class="paso aparece" style="--i:' + i + '">' +
-        '<div class="paso__numero">' + nn(i + 1) + '</div>' +
-        '<h3 class="paso__titulo">' + escapar(p.titulo) + '</h3>' +
-        '<p class="paso__texto">' + escapar(p.texto) + '</p>' +
-        '</div>';
-    }).join('');
 
     $('pieMarca').textContent = s.marca || '';
     $('pieTexto').textContent = s.tagline || '';
