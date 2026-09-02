@@ -11,145 +11,108 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=IBM+Plex+Mono:wght@400;500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/site.css?v=12">
+<link rel="stylesheet" href="/css/site.css?v=13">
 </head>
 <body>
 
-<a class="saltar-al-contenido" href="#catalogo">Saltar al catálogo</a>
+<a class="saltar-al-contenido" href="#piezas">Saltar a las piezas</a>
 
-<div class="grano" aria-hidden="true"></div>
+<!-- ================= EL HILO =================
+     Una sola hebra continua, dibujándose con el avance de la
+     página. El crochet no se ensambla: es un hilo que se anuda a
+     sí mismo hasta volverse objeto. Todo el sitio es eso. -->
+<svg class="hilo" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <path class="hilo__trazo" vector-effect="non-scaling-stroke"
+        d="M 8 -2 C 26 14, -4 30, 12 46 C 26 60, 40 66, 22 78 C 8 88, 30 94, 18 102"/>
+</svg>
+
+<!-- El cursor nombra la acción antes de que haya que adivinarla. -->
+<div class="cursor" id="cursor" aria-hidden="true">
+  <span class="cursor__punto"></span>
+  <span class="cursor__texto" id="cursorTexto"></span>
+</div>
 
 <header class="cabecera">
   <div class="anuncio" id="anuncio"></div>
   <div class="contenedor cabecera__fila">
-    <a class="marca" href="#inicio" id="marca">&nbsp;</a>
-    <nav class="nav nav--plegable" aria-label="Principal">
-      <a href="#catalogo">Tienda</a>
-      <a href="#como">Cómo encargar</a>
-      <a href="#contacto">Contacto</a>
+    <a class="marca" href="#inicio" id="marca" data-cursor="ir">&nbsp;</a>
+    <nav class="indice" aria-label="Índice">
+      <a href="#piezas" data-cursor="ir">Piezas <span class="cuenta" id="cuentaIndice"></span></a>
+      <a href="#encargo" data-cursor="ir">Encargo</a>
+      <a href="#contacto" data-cursor="ir">Contacto</a>
     </nav>
     <button class="menu-boton" id="menuBoton" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuMovil">
       <span></span><span></span><span></span>
     </button>
   </div>
   <nav class="menu-movil" id="menuMovil" aria-label="Menú móvil">
-    <a href="#catalogo">Tienda</a>
-    <a href="#como">Cómo encargar</a>
+    <a href="#piezas">Piezas</a>
+    <a href="#encargo">Encargo</a>
     <a href="#contacto">Contacto</a>
   </nav>
 </header>
 
-<!-- ================= Portada: el telón =================
-     Fija, a pantalla completa. No se va con el scroll: el resto
-     del sitio sube por encima. Lo único centrado de la página. -->
-<section class="portada" id="inicio">
-  <div class="portada__fondo" id="portadaFondo" aria-hidden="true"></div>
+<main id="inicio">
 
-  <div class="portada__lockup">
-    <div class="portada__fila">
-      <span class="portada__est">Tejido</span>
-      <svg class="portada__emblema" viewBox="0 0 64 64" role="img" aria-label="Ovillo">
-        <circle cx="32" cy="32" r="18" fill="none" stroke="#7d54c4" stroke-width="1.6"/>
-        <path d="M15 26c12 3 25 3 34 12M16 38c10-8 22-12 30-19M22 17c4 13 11 22 22 27"
-              fill="none" stroke="#7d54c4" stroke-width="1.3"/>
-        <path d="M50 32c6 2 8 7 6 12" fill="none" stroke="#7d54c4" stroke-width="1.3" stroke-linecap="round"/>
+  <!-- ================= UMBRAL =================
+       El hilo entra y se anuda; el nombre aparece porque el hilo
+       lo escribió. -->
+  <section class="umbral">
+    <div class="umbral__centro">
+      <svg class="umbral__nudo" viewBox="0 0 64 64" role="img" aria-label="Nudo">
+        <circle cx="32" cy="32" r="18"/>
+        <path d="M15 26c12 3 25 3 34 12M16 38c10-8 22-12 30-19M22 17c4 13 11 22 22 27"/>
+        <path d="M50 32c6 2 8 7 6 12"/>
       </svg>
-      <span class="portada__est">A mano</span>
+      <h1 class="umbral__marca" id="umbralMarca">{{MARCA}}</h1>
+      <p class="umbral__pie" id="umbralPie">{{TAGLINE}}</p>
     </div>
 
-    <h1 class="portada__titulo" id="portadaTitulo">{{MARCA}}</h1>
-    <p class="portada__bajada" id="portadaBajada">{{TAGLINE}}</p>
-  </div>
-
-  <div class="portada__pie">
-    <a class="portada__baja" href="#catalogo">Ver las piezas</a>
-  </div>
-</section>
-
-<!-- ================= El resto sube por encima ================= -->
-<div class="lienzo">
-<main>
-
-  <!-- ---------------- Manifiesto ---------------- -->
-  <section class="band band--primera">
-    <div class="contenedor historia__grid">
-      <div>
-        <h2 class="historia__titulo aparece" id="manifiestoTitulo"></h2>
-        <p class="historia__texto aparece" style="--i:1" id="manifiestoTexto"></p>
-      </div>
-      <div class="aparece" style="--i:2">
-        <a class="boton boton--linea" href="#catalogo" id="manifiestoCta"></a>
-      </div>
+    <div class="umbral__cuenta">
+      <b id="umbralCuenta">—</b>
+      <span id="umbralCuentaTexto">piezas en la colección</span>
     </div>
+
+    <a class="umbral__baja" href="#piezas" data-cursor="ir">Recorrer</a>
   </section>
 
-  <!-- ---------------- Catálogo ----------------
-       Fila horizontal. El scroll vertical la mueve de lado
-       cuando hay JS y ancho suficiente; si no, se arrastra. -->
-  <section class="gal" id="catalogo">
-    <div class="gal-stage">
-      <div class="gal-ghost" aria-hidden="true">PIEZAS</div>
-      <div class="gal-head">
-        <h2>Lo que hay ahora mismo</h2>
-        <div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría"></div>
-      </div>
-      <div class="gal-track" id="grid" tabindex="0" aria-label="Piezas disponibles">
-        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
-        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
-        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
-        <div class="esqueleto"><div class="esqueleto__foto"></div><div class="esqueleto__linea"></div><div class="esqueleto__linea esqueleto__linea--corta"></div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ---------------- Historia ---------------- -->
-  <section class="band band--hundida">
-    <div class="contenedor historia__grid">
-      <div>
-        <h2 class="historia__titulo aparece" id="bandaTitulo"></h2>
-        <p class="historia__texto aparece" style="--i:1" id="bandaTexto"></p>
-      </div>
-      <div class="aparece" style="--i:2">
-        <a class="boton" id="bandaCta" href="#contacto"></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ---------------- Cómo encargar ---------------- -->
-  <section class="band" id="como">
+  <!-- ================= MANIFIESTO ================= -->
+  <section class="manifiesto">
     <div class="contenedor">
-      <div class="bandhead aparece">
-        <h2 id="pasosTitulo"></h2>
-        <p class="etiqueta">Tres pasos</p>
+      <p class="etiqueta aparece">El taller</p>
+      <h2 class="manifiesto__texto aparece" style="--i:1" id="manifiestoTexto"></h2>
+      <p class="manifiesto__nota aparece" style="--i:2" id="manifiestoNota"></p>
+      <div class="manifiesto__pie aparece" style="--i:3">
+        <div class="manifiesto__dato">
+          <p class="etiqueta">Método</p>
+          <span>Una hebra, sin costuras</span>
+        </div>
+        <div class="manifiesto__dato">
+          <p class="etiqueta">Tirada</p>
+          <span id="datoTirada">—</span>
+        </div>
+        <div class="manifiesto__dato">
+          <p class="etiqueta">Encargo</p>
+          <span>Color y talla a pedido</span>
+        </div>
       </div>
-      <div class="pasos__grid" id="pasosGrid"></div>
     </div>
   </section>
 
-  <!-- ---------------- Tira ---------------- -->
-  <section class="band">
-    <div class="contenedor">
-      <div class="tira__grid">
-        <div class="tira__item">
-          <h3>Hecho a mano</h3>
-          <p>Pieza por pieza, sin máquinas.</p>
-        </div>
-        <div class="tira__item">
-          <h3>Envíos</h3>
-          <p id="tiraEnvio"></p>
-        </div>
-        <div class="tira__item">
-          <h3>Encargos</h3>
-          <p>Colores y tallas a pedido.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ================= LAS PIEZAS =================
+       Una escena fijada por pieza. Las arma el JS con lo que
+       devuelve /api/site, para que el panel siga mandando. -->
+  <div class="piezas" id="piezas">
+    <div class="cargando" id="cargando">Tirando del hilo…</div>
+  </div>
 </main>
 
-<!-- ---------------- Pie ---------------- -->
-<footer class="pie" id="contacto">
+<!-- ================= CIERRE ================= -->
+<footer class="cierre" id="contacto">
   <div class="contenedor">
+    <h2 class="cierre__titulo aparece" id="encargo">Cómo encargar</h2>
+    <div class="pasos__grid" id="pasosGrid"></div>
+
     <div class="pie__grid">
       <div>
         <div class="pie__marca" id="pieMarca"></div>
@@ -162,8 +125,8 @@
       <div>
         <h4>El sitio</h4>
         <ul class="pie__lista">
-          <li><a href="#catalogo">Tienda</a></li>
-          <li><a href="#como">Cómo encargar</a></li>
+          <li><a href="#piezas">Piezas</a></li>
+          <li><a href="#encargo">Cómo encargar</a></li>
           <li><a href="/legal.html#terminos">Términos y condiciones</a></li>
           <li><a href="/legal.html#devoluciones">Cambios y devoluciones</a></li>
           <li><a href="/legal.html#privacidad">Privacidad</a></li>
@@ -176,33 +139,16 @@
     </div>
   </div>
 </footer>
-</div><!-- /.lienzo -->
 
-<!-- ================= Ficha ================= -->
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalNombre">
-  <div class="modal__fondo" data-cerrar></div>
-  <div class="modal__caja">
-    <button class="modal__cerrar" data-cerrar aria-label="Cerrar">&times;</button>
-    <div class="modal__galeria">
-      <div class="modal__principal" id="modalPrincipal"></div>
-      <div class="modal__miniaturas" id="modalMiniaturas"></div>
-    </div>
-    <div class="modal__info">
-      <p class="etiqueta" id="modalCategoria"></p>
-      <h2 class="modal__nombre" id="modalNombre"></h2>
-      <div class="modal__precio" id="modalPrecio"></div>
-      <div class="modal__descripcion" id="modalDescripcion"></div>
-      <div class="modal__detalles" id="modalDetalles"></div>
-      <div class="modal__acciones">
-        <a class="boton" id="modalPedir" target="_blank" rel="noopener">Pedir por WhatsApp</a>
-        <p class="modal__nota" id="modalNota"></p>
-      </div>
-    </div>
-  </div>
+<!-- ================= UNIVERSO =================
+     La ficha completa. Se abre desde la lámina y ocupa todo. -->
+<div class="universo" id="universo" role="dialog" aria-modal="true" aria-labelledby="universoNombre">
+  <button class="universo__cerrar" id="universoCerrar" aria-label="Cerrar">&times;</button>
+  <div class="universo__caja" id="universoCaja"></div>
 </div>
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
-<script src="/js/site.js?v=8"></script>
+<script src="/js/site.js?v=9"></script>
 </body>
 </html>
