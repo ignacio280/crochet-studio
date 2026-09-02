@@ -6,10 +6,10 @@
    precio o una foto, cambia acá.
 
    Regla de rendimiento que ordena el resto: este archivo NO
-   anima. Solo mide y escribe números en variables CSS
-   (--avance, --vel, --p). Las transformaciones las resuelve la
-   hoja de estilos, que corre en el compositor. Por eso hay
-   movimiento en cada pantalla y el hilo principal sigue libre.
+   anima. Solo mide y escribe un número por escena (--p). Las
+   transformaciones las resuelve la hoja de estilos, en el
+   compositor. Por eso hay movimiento en cada pantalla sin ocupar
+   el hilo principal.
    ============================================================ */
 (function () {
   'use strict';
@@ -54,7 +54,9 @@
 
   /* ---------------- Umbral ----------------
      El nombre entra letra por letra. El servidor ya lo escribió
-     entero en el HTML: sin JavaScript se ve igual, solo quieto. */
+     entero en el HTML: sin JavaScript se ve igual, solo quieto.
+     La entrada nunca esconde el contenido —ver la nota sobre
+     `backwards` en la hoja de estilos. */
 
   function armarUmbral() {
     var el = $('umbralMarca');
@@ -75,9 +77,6 @@
 
     document.title = (s.marca || 'Tienda') + ' — ' + (s.tagline || 'Taller de crochet');
     $('marca').textContent = s.marca || 'Tienda';
-
-    $('anuncio').textContent = s.anuncio || '';
-    $('anuncio').style.display = s.anuncio ? '' : 'none';
 
     // La cuenta de la colección es un dato verdadero, no una
     // urgencia inventada: son las piezas que existen.
@@ -207,7 +206,6 @@
      tres números. Nada más. */
 
   var escenas = [];
-  var largoHilo = 3000;
 
   function medirEscenas() {
     escenas = [].slice.call(document.querySelectorAll('.escena')).map(function (el) {
@@ -220,34 +218,11 @@
       };
     });
 
-    var trazo = document.querySelector('.hilo__trazo');
-    if (trazo && trazo.getTotalLength) {
-      try {
-        largoHilo = Math.max(1, trazo.getTotalLength());
-        document.documentElement.style.setProperty('--largo', largoHilo);
-      } catch (e) {}
-    }
     recorrer();
   }
 
-  var yAnterior = 0;
-  var vel = 0;
-
   function recorrer() {
     var y = window.pageYOffset;
-    var alto = document.documentElement.scrollHeight - window.innerHeight;
-    var raiz = document.documentElement;
-
-    raiz.style.setProperty('--avance', alto > 0 ? Math.min(1, Math.max(0, y / alto)).toFixed(4) : 0);
-
-    // Velocidad con signo, normalizada y con caída: el hilo se
-    // tensa al bajar rápido y se suelta al parar.
-    var delta = (y - yAnterior) / 90;
-    yAnterior = y;
-    vel = Math.max(-1, Math.min(1, vel * 0.82 + delta * 0.35));
-    if (Math.abs(vel) < 0.002) vel = 0;
-    raiz.style.setProperty('--vel', vel.toFixed(3));
-
     var margen = window.innerHeight * 1.2;
     for (var i = 0; i < escenas.length; i++) {
       var e = escenas[i];
@@ -270,9 +245,6 @@
       var pegada = window.pageYOffset > 12;
       if (pegada !== pegadaAntes) { cab.classList.toggle('pegada', pegada); pegadaAntes = pegada; }
       recorrer();
-      // Mientras el hilo siga tenso hace falta otro cuadro para
-      // devolverlo a cero, aunque ya nadie esté scrolleando.
-      if (vel !== 0 && !pedido) { pedido = true; requestAnimationFrame(marco); }
     }
 
     addEventListener('scroll', function () {
@@ -497,8 +469,20 @@
     });
   }
 
-  /* ---------------- Arranque ---------------- */
+  /* ---------------- Arranque ----------------
 
+     La entrada se habilita solo si la página se está viendo. Si
+     carga en una pestaña de fondo, las animaciones no arrancarían
+     y el contenido se quedaría en su primer fotograma —invisible—
+     hasta que alguien mire. Sin esta clase, no hay animación y no
+     hay nada que esperar. */
+
+  function habilitarEntrada() {
+    if (document.visibilityState !== 'visible') return;
+    document.documentElement.classList.add('anima');
+  }
+
+  habilitarEntrada();
   armarUmbral();
   armarCursor();
 

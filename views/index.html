@@ -11,20 +11,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=IBM+Plex+Mono:wght@400;500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/site.css?v=13">
+<link rel="stylesheet" href="/css/site.css?v=14">
 </head>
 <body>
 
 <a class="saltar-al-contenido" href="#piezas">Saltar a las piezas</a>
 
-<!-- ================= EL HILO =================
-     Una sola hebra continua, dibujándose con el avance de la
-     página. El crochet no se ensambla: es un hilo que se anuda a
-     sí mismo hasta volverse objeto. Todo el sitio es eso. -->
-<svg class="hilo" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-  <path class="hilo__trazo" vector-effect="non-scaling-stroke"
-        d="M 8 -2 C 26 14, -4 30, 12 46 C 26 60, 40 66, 22 78 C 8 88, 30 94, 18 102"/>
-</svg>
 
 <!-- El cursor nombra la acción antes de que haya que adivinarla. -->
 <div class="cursor" id="cursor" aria-hidden="true">
@@ -33,7 +25,6 @@
 </div>
 
 <header class="cabecera">
-  <div class="anuncio" id="anuncio"></div>
   <div class="contenedor cabecera__fila">
     <a class="marca" href="#inicio" id="marca" data-cursor="ir">&nbsp;</a>
     <nav class="indice" aria-label="Índice">
@@ -54,9 +45,7 @@
 
 <main id="inicio">
 
-  <!-- ================= UMBRAL =================
-       El hilo entra y se anuda; el nombre aparece porque el hilo
-       lo escribió. -->
+  <!-- ================= UMBRAL ================= -->
   <section class="umbral">
     <div class="umbral__centro">
       <svg class="umbral__nudo" viewBox="0 0 64 64" role="img" aria-label="Nudo">
@@ -103,7 +92,7 @@
        Una escena fijada por pieza. Las arma el JS con lo que
        devuelve /api/site, para que el panel siga mandando. -->
   <div class="piezas" id="piezas">
-    <div class="cargando" id="cargando">Tirando del hilo…</div>
+    <div class="cargando" id="cargando">Cargando la colección…</div>
   </div>
 </main>
 
@@ -149,6 +138,6 @@
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
-<script src="/js/site.js?v=9"></script>
+<script src="/js/site.js?v=10"></script>
 </body>
 </html>

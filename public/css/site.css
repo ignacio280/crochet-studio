@@ -14,10 +14,9 @@
    Los colores y las letras son las del taller. Lo que cambia es
    qué hace cada cosa.
 
-   El motor: el JavaScript solo escribe números en variables CSS
-   (--p por escena, --vel, --avance). Todo lo visual se resuelve
-   acá. Así el movimiento vive en el compositor y no en el hilo
-   principal.
+   El motor: el JavaScript solo escribe un número por escena
+   (--p, de 0 a 1). Todo lo visual se resuelve acá, en el
+   compositor, sin ocupar el hilo principal.
    ============================================================ */
 
 :root {
@@ -65,11 +64,6 @@
   --suave: cubic-bezier(0.2, 0.7, 0.3, 1);
   --entra: cubic-bezier(0.16, 1, 0.3, 1);
   --muelle: cubic-bezier(0.22, 1.2, 0.36, 1);
-
-  /* Las escribe el JS. Acá van los valores de reposo, para que la
-     página se vea entera aunque el script no llegue nunca. */
-  --avance: 0;   /* 0..1 recorrido total de la página */
-  --vel: 0;      /* -1..1 velocidad de scroll con signo */
 }
 
 * { box-sizing: border-box; }
@@ -137,37 +131,6 @@ button { font: inherit; color: inherit; }
 .saltar-al-contenido:focus { left: var(--s4); top: var(--s4); }
 
 /* ============================================================
-   EL HILO
-
-   Una sola línea, fija sobre la ventana, que se dibuja según el
-   avance de la página y se tensa con la velocidad del scroll.
-   No es un adorno: es el elemento que sostiene el concepto, y
-   por eso está en todas las pantallas y en todos los estados.
-   ============================================================ */
-
-.hilo {
-  position: fixed;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  width: 100%;
-  height: 100%;
-}
-.hilo__trazo {
-  fill: none;
-  stroke: var(--arcilla);
-  stroke-width: 1.1;
-  stroke-linecap: round;
-  opacity: 0.45;
-  /* El largo real lo mide el JS; esto es solo el reposo. */
-  stroke-dasharray: var(--largo, 3000);
-  stroke-dashoffset: calc(var(--largo, 3000) * (1 - var(--avance)));
-  /* La tensión: al scrollear rápido el hilo se estira de lado. */
-  transform: translate3d(calc(var(--vel) * -2.5vw), 0, 0);
-  transition: transform 0.5s var(--suave);
-}
-
-/* ============================================================
    CURSOR
 
    Cambia según lo que hay debajo. Es lenguaje visual, no juguete:
@@ -231,17 +194,6 @@ button { font: inherit; color: inherit; }
   border-bottom-color: var(--linea);
 }
 
-.anuncio {
-  background: var(--noche);
-  color: var(--papel);
-  text-align: center;
-  padding: var(--s2) var(--margen);
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-}
-.anuncio:empty { display: none; }
 
 .cabecera__fila {
   display: flex; align-items: center; justify-content: space-between;
@@ -289,9 +241,8 @@ button { font: inherit; color: inherit; }
 /* ============================================================
    UMBRAL — la entrada
 
-   No es un hero con un banner. Es el momento en que el hilo entra
-   en la pantalla y se anuda: el nombre aparece porque el hilo lo
-   escribió, no antes.
+   No es un hero con un banner: es el nudo, el nombre y la cuenta
+   real de la colección, y nada más.
    ============================================================ */
 
 .umbral {
@@ -372,12 +323,23 @@ button { font: inherit; color: inherit; }
   .umbral__baja { display: none; }
 }
 
+/* La entrada va colgada de .anima, y esa clase la pone el JS solo
+   si la página se está viendo de verdad.
+
+   Antes la portada arrancaba en opacity 0 y volvía a 1 al terminar
+   la animación. En una pestaña en segundo plano las animaciones no
+   arrancan nunca: la portada se quedaba en el primer fotograma, o
+   sea invisible, y el sitio se veía en blanco. Sin la clase no hay
+   animación y el contenido está simplemente ahí.
+
+   La regla, para no repetirlo: nada que lleve información puede
+   depender de que una animación llegue a correr. */
 @media (prefers-reduced-motion: no-preference) {
-  .umbral__marca .letra { animation: entraLetra 0.9s var(--muelle) both; animation-delay: calc(var(--i) * 70ms + 0.45s); }
-  .umbral__nudo   { animation: entraNudo 1.1s var(--entra) 0.1s both; }
-  .umbral__pie    { animation: sube 0.8s var(--suave) 1.15s both; }
-  .umbral__cuenta { animation: sube 0.8s var(--suave) 1.35s both; }
-  .umbral__baja   { animation: sube 0.8s var(--suave) 1.55s both; }
+  .anima .umbral__marca .letra { animation: entraLetra 0.7s var(--muelle) backwards; animation-delay: calc(var(--i) * 60ms + 0.1s); }
+  .anima .umbral__nudo   { animation: entraNudo 0.8s var(--entra) 0s backwards; }
+  .anima .umbral__pie    { animation: sube 0.6s var(--suave) 0.3s backwards; }
+  .anima .umbral__cuenta { animation: sube 0.6s var(--suave) 0.4s backwards; }
+  .anima .umbral__baja   { animation: sube 0.6s var(--suave) 0.5s backwards; }
 }
 @keyframes entraLetra { from { opacity: 0; transform: translateY(0.4em) rotate(2deg); } to { opacity: 1; transform: none; } }
 @keyframes entraNudo  { from { opacity: 0; transform: scale(0.8) rotate(-12deg); } to { opacity: 1; transform: none; } }
@@ -715,7 +677,7 @@ button { font: inherit; color: inherit; }
 }
 
 /* ============================================================
-   CIERRE — el hilo se remata
+   CIERRE
    ============================================================ */
 
 .cierre {
@@ -794,12 +756,13 @@ button { font: inherit; color: inherit; }
 }
 .aviso.visible { opacity: 1; transform: translate(-50%, 0); }
 
-.aparece {
+/* Mismo criterio: sin .anima esto no se esconde nunca. */
+.anima .aparece {
   opacity: 0; transform: translateY(18px);
   transition: opacity 0.7s var(--suave), transform 0.7s var(--suave);
   transition-delay: calc(var(--i, 0) * 70ms);
 }
-.aparece.visible { opacity: 1; transform: none; }
+.anima .aparece.visible { opacity: 1; transform: none; }
 
 /* ============================================================
    Menos movimiento
@@ -817,7 +780,6 @@ button { font: inherit; color: inherit; }
     transition-duration: 0.01ms !important;
   }
   .aparece { opacity: 1; transform: none; }
-  .hilo { display: none; }
   .cursor { display: none !important; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
