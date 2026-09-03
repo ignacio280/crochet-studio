@@ -220,6 +220,14 @@
 
     $('piezas').innerHTML = piezas;
 
+    /* Lo unico que el JS le dice al recorrido es cuantas piezas
+       hay. El resto —el alto que hace falta, cuanto se desplaza la
+       tira y a que ritmo— lo calcula la hoja de estilos, y la
+       animacion la lleva el navegador atada al scroll. Ni un
+       cuadro de JavaScript en todo el recorrido. */
+    var vista = $('piezasVista');
+    if (vista) vista.style.setProperty('--n', lista.length);
+
     observarPiezas();
     armarCartas();
     armarTira();

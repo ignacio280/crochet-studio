@@ -403,48 +403,94 @@ button { font: inherit; color: inherit; }
 }
 .manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
 /* ============================================================
-   LAS PIEZAS — una tira que se recorre de lado
+   LAS PIEZAS — el scroll las pasa de lado, una a la vez
 
-   Los productos en una fila. El desplazamiento lo hace el
-   navegador: overflow-x y scroll-snap, sin una sola linea que
-   mueva la barra por su cuenta.
+   Se baja por la pagina y la coleccion avanza en horizontal. Una
+   pieza en el centro, las vecinas asomando por los bordes.
 
-   Despues de tres motores propios que acabaron peleandose con el
-   scroll, la leccion esta aprendida: lo que el navegador ya sabe
-   hacer, se le deja. El enganche a cada pieza es scroll-snap
-   nativo y va en el compositor, asi que no puede trabarse.
+   Y ESTA VEZ NO LO MUEVE UN MOTOR MIO
 
-   Aqui el snap si puede ser mandatory sin miedo: manda solo dentro
-   de esta caja, no sobre la pagina. Lo que en su dia hubo que
-   descartar para el scroll vertical, que era de la pagina entera.
+   Tres veces intente esto con JavaScript: medir el scroll en cada
+   cuadro, traducirlo a una posicion y escribirla. Las tres acabaron
+   peleandose con el navegador y sintiendose trabadas.
 
-   Cada carta sigue al puntero con su basculado, que es lo unico
-   que quedaba del efecto anterior y lo unico que se pidio guardar.
+   Ahora lo lleva el propio navegador, con una animacion atada al
+   scroll. La envoltura declara una linea de tiempo; la tira se
+   anima a lo largo de ella. No hay un solo cuadro de JavaScript en
+   el recorrido: va en el compositor, como una animacion normal, y
+   por eso no puede trabarse. El JS solo dice cuantas piezas hay.
+
+   El alto de la envoltura decide cuanto scroll cuesta el recorrido:
+   una pantalla para plantarse, mas ocho decimos por pieza.
+
+   Si el navegador no conoce las lineas de tiempo, no se pierde
+   nada: la tira se queda como estaba, una fila que se recorre de
+   lado con el dedo, el trackpad o arrastrando. Por eso lo de arriba
+   es lo normal y lo de abajo va dentro de un @supports.
    ============================================================ */
 
 .piezas {
+  --ancho-carta: clamp(240px, 30vw, 380px);
+  --hueco: var(--s5);
   display: flex;
-  gap: var(--s5);
+  gap: var(--hueco);
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
-  /* Un respiro a los lados para que la primera y la ultima pieza
-     no queden pegadas al borde de la ventana. */
   padding: var(--s8) max(var(--margen), calc((100vw - var(--ancho)) / 2)) var(--s9);
-  /* Sin barra, como el resto del sitio. */
   scrollbar-width: none;
   -ms-overflow-style: none;
-  /* El dedo recorre la tira de lado y la pagina de arriba abajo. */
   touch-action: pan-x pan-y;
   cursor: grab;
 }
 .piezas::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .piezas.arrastrando { cursor: grabbing; scroll-snap-type: none; }
 
+@supports (animation-timeline: view()) {
+  .piezas-vista {
+    /* Una pantalla para plantarse, mas ocho decimos por cada paso. */
+    height: calc(100vh + (var(--n, 1) - 1) * 80vh);
+    view-timeline-name: --recorrido;
+    view-timeline-axis: block;
+  }
+
+  .piezas-escena {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: grid;
+    align-content: center;
+    overflow: hidden;
+  }
+
+  .piezas {
+    /* Ya no la recorre nadie a mano: la mueve la animacion. */
+    overflow: visible;
+    scroll-snap-type: none;
+    cursor: default;
+    padding: 0;
+    /* La primera y la ultima tambien se plantan en el centro. */
+    padding-inline: calc(50vw - var(--ancho-carta) / 2);
+    animation: correrTira linear both;
+    animation-timeline: --recorrido;
+    /* "contain" es justo el tramo en que la envoltura cubre la
+       ventana entera, o sea exactamente lo que dura el pegado. */
+    animation-range: contain 0% contain 100%;
+  }
+
+  @keyframes correrTira {
+    to {
+      transform: translateX(
+        calc(-1 * (var(--n, 1) - 1) * (var(--ancho-carta) + var(--hueco)))
+      );
+    }
+  }
+}
+
 .pieza {
   position: relative;
   flex: 0 0 auto;
-  width: clamp(230px, 24vw, 320px);
+  width: var(--ancho-carta);
   scroll-snap-align: center;
   display: grid;
   grid-template-rows: auto 1fr;
@@ -865,8 +911,16 @@ button { font: inherit; color: inherit; }
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  /* Sin movimiento: la tira sin enganche ni basculado. */
-  .piezas { scroll-snap-type: none; }
+  /* Sin movimiento: nada de recorrido ni de basculado. La
+     coleccion vuelve a ser una fila que se recorre a mano. */
+  .piezas-vista { height: auto; }
+  .piezas-escena { position: static; height: auto; overflow: visible; }
+  .piezas {
+    animation: none;
+    overflow-x: auto;
+    scroll-snap-type: none;
+    padding: var(--s8) var(--margen) var(--s9);
+  }
   .pieza__lamina { perspective: none; }
   .pieza__carta img { filter: none !important; }
   .pieza__rotulo { display: none; }

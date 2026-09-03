@@ -12,7 +12,7 @@
 <link rel="preload" href="/fonts/garamond-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/plexmono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/letras.css?v=3">
-<link rel="stylesheet" href="/css/site.css?v=45">
+<link rel="stylesheet" href="/css/site.css?v=46">
 </head>
 <body>
 
@@ -72,8 +72,12 @@
   <!-- ================= LAS PIEZAS =================
        Una escena fijada por pieza. Las arma el JS con lo que
        devuelve /api/site, para que el panel siga mandando. -->
-  <div class="piezas" id="piezas">
-    <div class="cargando" id="cargando">Cargando la colección…</div>
+  <div class="piezas-vista" id="piezasVista">
+    <div class="piezas-escena">
+      <div class="piezas" id="piezas">
+        <div class="cargando" id="cargando">Cargando la colección…</div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -115,6 +119,6 @@
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
-<script src="/js/site.js?v=40"></script>
+<script src="/js/site.js?v=41"></script>
 </body>
 </html>
