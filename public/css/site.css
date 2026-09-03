@@ -605,9 +605,23 @@ button { font: inherit; color: inherit; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 3px;
-  border: 1px solid var(--linea);
-  background: var(--arena);
+  /* Sin borde, sin fondo y sin radio: la foto toca el papel
+     directamente.
+
+     El borde era el tono raro que se veia en las esquinas. Medido
+     en la esquina de arriba a la izquierda de una copia, cruzando
+     el canto habia TRES tonos en pocos pixeles: el papel en
+     246,239,225, el borde en 217,203,176 y la foto en
+     199,197,184. Esa franja intermedia, ni papel ni foto, es lo
+     que se leia como un marco sucio. Y al pasar el raton se
+     notaba mas, porque el virado se va y la foto se enfria: su
+     distancia al papel pasa de 53 a 75.
+
+     El radio tampoco ayudaba: en cada esquina dejaba asomar una
+     cunia de papel en diagonal, que a tamanio grande se ve.
+
+     Ahora el canto es un solo salto, de papel a foto, que es lo
+     que hace una copia apoyada sobre una hoja. */
   will-change: transform;
   transform: translateZ(0);
   /* Virada al sepia en reposo, a color al acercarse. */
