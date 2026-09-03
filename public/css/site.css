@@ -449,57 +449,58 @@ button { font: inherit; color: inherit; }
 }
 
 /* ============================================================
-   LAS PIEZAS — galeria de cartas que se inclinan
+   LAS PIEZAS — reja de paralaje con cartas que se inclinan
 
-   Todas juntas en una reja, cerca unas de otras. Se acabo la
-   pantalla por pieza: la coleccion se ve de una mirada, que para
-   cinco objetos es lo honesto.
+   Tres columnas, cada una a su propio ritmo. Cada foto se inclina
+   segun donde este en la pantalla —se asoma al subir, pasa plana
+   por el centro, se aleja al salir— y ademas sigue al puntero con
+   su propio basculado, que vuelve con resorte amortiguado.
 
-   Cada carta sigue al puntero con una inclinacion en perspectiva y
-   vuelve con resorte amortiguado; el rotulo bascula segun la
-   velocidad vertical del cursor. El efecto viene escrito para
-   React con Tailwind, que este sitio no usa —ni puede cargar, por
-   la politica de seguridad—, asi que las clases de valor arbitrario
-   estan portadas a CSS de verdad: la perspectiva en la figura, el
-   preserve-3d en la carta y los 30px hacia delante del rotulo.
-   Sin eso la inclinacion se veria plana.
+   Son dos efectos apilados, y cada uno escribe en un elemento
+   distinto a proposito:
+
+     .columna  el desvio del paralaje
+     .pieza    la inclinacion por posicion en pantalla
+     .carta    el basculado del puntero
+
+   Si compartieran elemento se pisarian la transformada. Repartidos,
+   se componen: la columna arrastra, la baldosa se asoma y la carta
+   sigue al raton dentro de ella.
+
+   La perspectiva va en la reja, y preserve-3d en la columna y en
+   la baldosa. Lo de la columna es un anadido: la perspectiva solo
+   alcanza a los hijos directos, y la columna lleva su propia
+   transformada, que aplanaria a los suyos. Sin esa linea el
+   rotateX de las fotos no se veria como inclinacion sino como un
+   achatamiento.
    ============================================================ */
 
 .piezas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--s7) var(--s5);
-  align-items: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  perspective: 1200px;
   max-width: var(--ancho);
   margin: 0 auto;
-  padding: var(--s8) var(--margen) calc(var(--s10) + 80px);
+  padding: var(--s8) var(--margen) var(--s10);
 }
 
-/* El desorden, repartido en tres sitios distintos y no por
-   capricho:
+.columna {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
 
-     --desvio  baja la celda entera. Va en la celda porque mover la
-               figura descuadraria la caja que se mide para volar a
-               la ficha.
-     --giro    inclina la copia. Va en la carta, que es lo unico
-               que se transforma, y el JS lo respeta: escribe el
-               giro base delante de la inclinacion del puntero.
-     --talla   cambia el tamanio. Que no sean todas iguales es la
-               mitad del efecto.
-
-   Se reparte por posicion y no al azar: al recargar la pagina las
-   piezas quedan donde estaban. Un desorden que cambia solo no es
-   desorden, es ruido. */
-.pieza:nth-child(6n+1) { --desvio:  0px; --giro: -2.4deg; --talla: 1.00; }
-.pieza:nth-child(6n+2) { --desvio: 54px; --giro:  1.9deg; --talla: 0.86; }
-.pieza:nth-child(6n+3) { --desvio: 16px; --giro: -1.1deg; --talla: 1.07; }
-.pieza:nth-child(6n+4) { --desvio: 72px; --giro:  3.1deg; --talla: 0.91; }
-.pieza:nth-child(6n+5) { --desvio:  6px; --giro: -3.4deg; --talla: 0.99; }
-.pieza:nth-child(6n+6) { --desvio: 42px; --giro:  1.3deg; --talla: 0.84; }
-
-/* En una sola columna el desvio no desordena: solo abre huecos. */
-@media (max-width: 620px) {
-  .pieza { --desvio: 0px; --talla: 1; }
+@media (max-width: 860px) {
+  .piezas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .piezas { grid-template-columns: 1fr; }
+  /* En una columna el paralaje no separa nada: solo dejaria un
+     hueco al final. */
+  .columna { padding-bottom: 0 !important; transform: none !important; }
 }
 
 .pieza {
@@ -508,60 +509,57 @@ button { font: inherit; color: inherit; }
   grid-template-rows: auto 1fr;
   gap: var(--s4);
   align-content: start;
-  justify-items: stretch;
-  margin-top: var(--desvio, 0px);
   padding: 0;
   background: none;
   border: 0;
   cursor: pointer;
   color: inherit;
   text-align: left;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 /* La aparicion cuelga de una clase que pone el JS en el
-   contenedor. Sin ella las piezas estan puestas y visibles: una
-   pieza que necesita que corra un script para existir es una pieza
-   que a veces no existe. */
+   contenedor. Sin ella las piezas estan puestas y visibles. Y solo
+   toca la opacidad: cualquier transformada aqui le quitaria a la
+   baldosa la suya, que es la del paralaje. */
 .piezas.observando .pieza {
   opacity: 0;
   transition: opacity 0.7s var(--suave);
 }
 .piezas.observando .pieza.dentro { opacity: 1; }
 
-/* LA FIGURA — es la que lleva la perspectiva y el area sensible.
-   Nunca se inclina, y por eso su caja sirve para medir el vuelo
-   hacia la ficha. */
+/* LA FIGURA — lleva la perspectiva del basculado y el area
+   sensible. Nunca se transforma, y por eso su tamanio de
+   disposicion sirve para medir el vuelo hacia la ficha. */
 .pieza__lamina {
   position: relative;
   display: block;
-  height: calc(clamp(250px, 23vw, 380px) * var(--talla, 1));
+  width: 100%;
   aspect-ratio: 4 / 5;
-  width: auto;
-  margin: 0 auto;
   perspective: 800px;
 }
 
-/* LA CARTA — lo que se inclina. */
+/* LA CARTA — lo que sigue al puntero. */
 .pieza__carta {
   position: relative;
   display: block;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  /* El giro de reposo. Cuando hay basculado el JS reescribe la
+  /* El giro de reposo. Con basculado el JS reescribe la
      transformada entera y vuelve a poner este giro delante; esto
      es lo que se ve sin puntero fino o con movimiento reducido. */
   transform: rotate(var(--giro, 0deg));
 }
 
-/* Un trozo de cinta sujetando la copia. Alterna de lado con el
-   signo del giro, para que no se vean todas pegadas igual. */
+/* Un trozo de cinta sujetando la copia, alternando de lado. */
 .pieza__carta.sin-cinta::before { display: none; }
 .pieza__carta::before {
   content: "";
   position: absolute;
   top: -11px; left: 16%;
-  width: 62px; height: 22px;
+  width: 58px; height: 21px;
   transform: translateZ(1px) rotate(-7deg);
   background: linear-gradient(
     150deg,
@@ -571,28 +569,26 @@ button { font: inherit; color: inherit; }
   z-index: 2;
   pointer-events: none;
 }
-.pieza:nth-child(even) .pieza__carta.sin-cinta::before { display: none; }
-.pieza__carta::before {
+.pieza:nth-child(even) .pieza__carta::before {
   left: auto; right: 14%;
   transform: translateZ(1px) rotate(6deg);
 }
+
 .pieza__carta img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 3px;
   border: 1px solid var(--linea);
   background: var(--arena);
-  /* Dos sombras: una corta y dura, de objeto apoyado, y una larga
-     y blanda, de objeto separado del fondo. */
   box-shadow:
     0 2px 3px rgba(46, 29, 15, 0.20),
     0 16px 34px rgba(46, 29, 15, 0.16);
   will-change: transform;
   transform: translateZ(0);
-  /* Virada al sepia en reposo, a color al acercarse. Larga a
-     proposito: es un descubrimiento, no un interruptor. */
+  /* Virada al sepia en reposo, a color al acercarse. */
   filter: sepia(0.42) saturate(0.78) contrast(0.94) brightness(1.02);
   transition: filter 900ms var(--suave);
 }
@@ -601,8 +597,7 @@ button { font: inherit; color: inherit; }
 
 .pieza__carta .plato__falta { z-index: 2; transform: translateZ(30px); }
 
-/* EL ROTULO — sigue al cursor y bascula con su velocidad.
-   Se coloca desde el JS; aca solo vive su forma. */
+/* EL ROTULO — sigue al cursor y bascula con su velocidad. */
 .pieza__rotulo {
   position: absolute;
   top: 0; left: 0;
@@ -621,7 +616,6 @@ button { font: inherit; color: inherit; }
   text-transform: uppercase;
   box-shadow: 0 8px 20px rgba(26, 13, 6, 0.3);
 }
-/* Sin puntero fino no hay rotulo que valga: nunca se muestra. */
 @media not all and (hover: hover) and (pointer: fine) {
   .pieza__rotulo { display: none; }
 }
@@ -956,6 +950,10 @@ button { font: inherit; color: inherit; }
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
+  /* Sin movimiento: reja plana, sin desvios ni inclinaciones. */
+  .piezas { perspective: none; }
+  .columna { transform: none !important; padding-bottom: 0 !important; }
+  .pieza { transform: none !important; }
   .pieza__lamina { perspective: none; }
   .pieza__carta img { filter: none !important; }
   .pieza__rotulo { display: none; }

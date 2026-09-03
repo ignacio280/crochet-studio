@@ -215,12 +215,30 @@
             '<span class="ficha__rareza ' + est.clase + '"><b>' + nn(n) + '</b><span>' + est.texto + '</span></span>' +
           '</span>' +
         '</span>' +
-      '</button>';
+      '</button><!--corte-->';
     }).join('');
 
-    $('piezas').innerHTML = piezas;
+    /* Reparto por turnos y no por trozos: asi las columnas quedan
+       con la misma cantidad —o una de diferencia— y el orden de
+       lectura sigue siendo de izquierda a derecha, fila por fila. */
+    var COLS = VELOCIDADES.length;
+    var cubos = [];
+    for (var c = 0; c < COLS; c++) cubos.push([]);
+    for (var k = 0; k < lista.length; k++) cubos[k % COLS].push(k);
+
+    var trozos = piezas.split('<!--corte-->');
+    $('piezas').innerHTML = cubos.map(function (indices, ci) {
+      /* Las columnas rapidas se quedan sin fotos antes; el relleno
+         de abajo evita que su ultima pieza se despegue del borde. */
+      var relleno = Math.max(0, (VELOCIDADES[ci] - 1) * INTENSIDAD * 900);
+      return '<div class="columna" style="padding-bottom:' + relleno.toFixed(0) + 'px">' +
+        indices.map(function (i) { return trozos[i]; }).join('') +
+        '</div>';
+    }).join('');
+
     observarPiezas();
     armarCartas();
+    armarParalaje();
   }
 
   /* ---------------- La aparicion de cada pieza ----------------
@@ -467,6 +485,108 @@
     else mostrar();
   }
 
+  /* ---------------- La reja con paralaje ----------------
+
+     Tres columnas, cada una a su propio ritmo, y cada foto
+     inclinada segun donde este en la pantalla: se asoma al subir
+     desde abajo, pasa plana por el centro y se aleja al salir por
+     arriba.
+
+     Dos decisiones que el efecto explica y conviene no deshacer:
+
+     El desplazamiento de columna es RELATIVO, medido desde que la
+     reja entra en pantalla. Con la posicion cruda del scroll las
+     columnas ya llegarian separadas.
+
+     La inclinacion se saca del centro de cada foto, asi que es
+     continua: no da un salto al cruzar ningun umbral.
+
+     Las transformadas se escriben directas al elemento dentro de un
+     cuadro. Pasar veinte fotos por el estado de la pagina en cada
+     evento de scroll seria perder cuadros.
+
+     UNA COSA AÑADIDA, Y ES PARA QUE EL EFECTO OCURRA
+
+     El fuente pone perspective en la reja y preserve-3d en cada
+     baldosa. Pero la perspectiva solo alcanza a los hijos directos
+     —las columnas—, y la columna lleva su propia transformada, que
+     aplana a los suyos. Sin preserve-3d en la columna, el rotateX
+     de las fotos no se ve como inclinacion sino como un
+     achatamiento vertical. Se le pone a la columna: es la linea
+     que hace verdad lo que el efecto dice que hace. */
+
+  var VELOCIDADES = [1.2, 1.0, 1.4];   // la del medio es la referencia
+  var INCLINACION = 12;                 // grados en los bordes
+  var INTENSIDAD = 0.5;
+  var acotar = function (v, a, b) { return Math.min(Math.max(v, a), b); };
+
+  function armarParalaje() {
+    var reja = $('piezas');
+    if (!reja || quieto.matches) return;   // sin movimiento: reja normal
+
+    var columnas = [].slice.call(reja.querySelectorAll('.columna'));
+    var baldosas = [].slice.call(reja.querySelectorAll('.pieza'));
+    if (!columnas.length) return;
+
+    var pedido = false, aLaVista = true, cuadro = 0;
+
+    function medir() {
+      pedido = false;
+      var altoVista = window.innerHeight;
+      /* Una ventana sin alto es un estado real —pestania de fondo,
+         panel plegado, el cuadro anterior a la disposicion—.
+         Medir a traves de el seria dividir por cero y clavar todas
+         las fotos en la inclinacion maxima. Se espera; el
+         observador de tamanio nos trae de vuelta. */
+      if (altoVista <= 0) return;
+
+      var centroVista = altoVista / 2;
+
+      // Cuanto ha recorrido la reja desde que su borde de arriba
+      // toco el borde de abajo de la ventana.
+      var recorrido = altoVista - reja.getBoundingClientRect().top;
+
+      for (var i = 0; i < columnas.length; i++) {
+        var v = VELOCIDADES[i] === undefined ? 1 : VELOCIDADES[i];
+        var desvio = -recorrido * (v - 1) * INTENSIDAD;
+        columnas[i].style.transform = 'translate3d(0, ' + desvio.toFixed(2) + 'px, 0)';
+      }
+
+      for (var j = 0; j < baldosas.length; j++) {
+        var caja = baldosas[j].getBoundingClientRect();
+        var centro = caja.top + caja.height / 2;
+        // -1 arriba del todo, +1 abajo del todo.
+        var n = acotar((centro - centroVista) / (altoVista / 2), -1, 1);
+        // Por debajo del centro se asoma; por encima se aleja.
+        baldosas[j].style.transform = 'rotateX(' + (-n * INCLINACION).toFixed(2) + 'deg)';
+      }
+    }
+
+    function pedir() {
+      if (pedido || !aLaVista) return;
+      pedido = true;
+      cuadro = requestAnimationFrame(medir);
+    }
+
+    /* Los eventos de scroll no burbujean, pero si bajan en la fase
+       de captura: un solo oyente en window recoge tanto el de la
+       pagina como el de cualquier contenedor que la reja tenga
+       encima. */
+    addEventListener('scroll', pedir, { passive: true, capture: true });
+    addEventListener('resize', pedir);
+
+    new IntersectionObserver(function (e) {
+      aLaVista = e[0].isIntersecting;
+      if (aLaVista) pedir();
+    }, { rootMargin: '20%' }).observe(reja);
+
+    // Las fotos que van llegando cambian el alto de las columnas, y
+    // con el todos los desvios.
+    new ResizeObserver(pedir).observe(reja);
+
+    medir();
+  }
+
   /* ---------------- El resorte ----------------
 
      Solucionador de resortes minimo, portado del que venia con el
@@ -707,6 +827,24 @@
   // La transformada que lleva una caja encima de otra, con origen
   // arriba a la izquierda. Las dos son 4:5, asi que una sola
   // escala vale para los dos ejes.
+  /* La caja de la figura como si nada la hubiera tocado.
+
+     La baldosa que la contiene lleva un rotateX del paralaje, que
+     achata su recuadro: medirlo tal cual daria una caja mas baja y
+     el vuelo hacia la ficha saldria deformado. El rotateX gira
+     sobre el centro, asi que el centro sigue siendo bueno; el
+     tamanio se toma de la disposicion, que ignora transformadas. */
+  function cajaSinInclinar(el) {
+    var r = el.getBoundingClientRect();
+    var w = el.offsetWidth, h = el.offsetHeight;
+    return {
+      left: r.left + r.width / 2 - w / 2,
+      top: r.top + r.height / 2 - h / 2,
+      width: w,
+      height: h
+    };
+  }
+
   function llevarA(caja, hacia) {
     return 'translate(' + (hacia.left - caja.left) + 'px, ' + (hacia.top - caja.top) + 'px)' +
            ' scale(' + (hacia.width / caja.width) + ')';
@@ -715,7 +853,7 @@
   function volarAdentro(pieza) {
     var u = $('universo');
     var plato = laminaDe(pieza);
-    var origen = plato.getBoundingClientRect();
+    var origen = cajaSinInclinar(plato);
 
     /* Sin cuadros no hay vuelo que valga.
 
@@ -804,7 +942,7 @@
     if (!lamina || document.hidden) { listo(); return; }
 
     var desde = lamina.getBoundingClientRect();
-    var hacia = plato.getBoundingClientRect();
+    var hacia = cajaSinInclinar(plato);
     var clon = clonVolador(plato, desde);
     lamina.style.visibility = 'hidden';
     // La pieza se enciende mientras el plato vuelve, no despues:
