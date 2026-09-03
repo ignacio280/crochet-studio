@@ -403,6 +403,52 @@ button { font: inherit; color: inherit; }
 }
 .manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
 /* ============================================================
+   LA VITRINA — la coleccion curvada en arco
+
+   Una banda de ancho completo con la coleccion en una tira sin fin,
+   que se arrastra. Es WebGL: el lienzo lo pone el modulo.
+
+   El alto va aqui y es obligatorio. El lienzo llena a su padre y
+   nunca se dimensiona solo: un padre sin alto da un lienzo de cero
+   pixeles y no aparece nada.
+
+   La banda no se ve hasta que el modulo la marca lista. Si WebGL
+   no arranca —o el modulo no llega—, la seccion se queda plegada
+   en vez de dejar un hueco vacio del alto de media pantalla. No
+   esconde contenido: las mismas piezas estan completas mas abajo.
+   ============================================================ */
+
+.vitrina-seccion {
+  position: relative;
+  margin: var(--s9) 0 var(--s7);
+  border-top: 1px solid var(--linea);
+  border-bottom: 1px solid var(--linea);
+  background: var(--hueso);
+  padding: var(--s6) 0 var(--s5);
+  display: none;
+}
+.vitrina-seccion:has(.vitrina.lista) { display: block; }
+
+.vitrina-seccion__rotulo {
+  text-align: center;
+  margin-bottom: var(--s5);
+  color: var(--tinta-45);
+}
+
+.vitrina {
+  height: clamp(380px, 52vh, 560px);
+  width: 100%;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;   /* el dedo sigue pudiendo desplazar la pagina */
+}
+.vitrina:active { cursor: grabbing; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrina { height: clamp(300px, 40vh, 420px); }
+}
+
+/* ============================================================
    LAS PIEZAS — galeria de cartas que se inclinan
 
    Todas juntas en una reja, cerca unas de otras. Se acabo la

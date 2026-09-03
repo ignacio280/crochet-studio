@@ -957,6 +957,11 @@
       estado.productos = data.productos || [];
       pintarTextos();
       pintarEscenas();
+      // La vitrina en arco vive en su propio modulo y necesita los
+      // mismos datos. Se los pasa este aviso, para no pedir la API
+      // dos veces.
+      window.SDB = { datos: estado };
+      document.dispatchEvent(new CustomEvent('sdb:datos', { detail: estado }));
       conectarEventos();
       vigilarScroll();
       observarAparicion();
