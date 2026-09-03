@@ -788,6 +788,22 @@ button { font: inherit; color: inherit; }
   will-change: transform;
 }
 .vuelo .plato__falta { display: none; }
+
+/* El clon vuela a color, no virado.
+
+   Hereda de .pieza__carta img, que en reposo lleva el sepia. Pero
+   el clon no esta dentro de una .pieza, asi que la regla de :hover
+   que lo quita no le alcanza: salia virado mientras el original
+   bajo el cursor estaba a color y la lamina de la ficha, su
+   destino, tambien. Se veia un segundo en blanco y negro en mitad
+   del viaje, con un salto al despegar y otro al aterrizar.
+
+   Y sin transicion: la de 900 ms del virado convertiria el cambio
+   en un desvanecido justo mientras la foto viaja. */
+.vuelo .pieza__carta img {
+  filter: none;
+  transition: none;
+}
 @media (max-width: 860px) { .universo__caja { grid-template-columns: 1fr; } }
 
 /* skill: beautiful-shadows, en su escalón "sm". SDB no usa Tailwind,
