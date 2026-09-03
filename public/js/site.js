@@ -203,7 +203,6 @@
                      'aria-label="Ver ' + escapar(p.nombre) + '">' +
         '<span class="pieza__lamina">' +
           '<span class="pieza__carta">' + lamina(p, i < 3, i) + '</span>' +
-          '<span class="pieza__rotulo">' + escapar(p.nombre) + '</span>' +
         '</span>' +
         '<span class="pieza__ficha">' +
           '<span>' +
@@ -589,8 +588,7 @@
   /* ---------------- El basculado de las cartas ----------------
 
      La carta se inclina siguiendo al puntero, vuelve con resorte
-     amortiguado, y el rotulo bascula segun la velocidad vertical
-     del cursor.
+     amortiguado.
 
      Solo donde hay puntero fino, y nunca con movimiento reducido
      activo: es una prestacion del raton y es movimiento que
@@ -600,38 +598,40 @@
      se apaga solo. Por eso montar las cinco cartas no cuesta nada
      en reposo. */
 
+  /* El rotulo que seguia al cursor se quito, y con el sus dos
+     resortes —el fundido y el vaiven— y su constante de balanceo.
+
+     El motivo, medido: la pastilla es de 198x30 y se colocaba en
+     la posicion del cursor dentro de la figura, asi que en la
+     esquina de abajo a la derecha sobresalia 184 px por la derecha
+     y 13 por abajo, con su sombra oscura de 20 px cayendo sobre el
+     papel. Eso era la mancha que aparecia al pasar el raton por esa
+     esquina, en todas las fotos.
+
+     El propio efecto contempla quitarlo cuando la disposicion no le
+     va —showTooltip en falso—, y aqui no le va por partida doble:
+     el nombre de la pieza ya esta al lado de la foto, en letra
+     grande. Repetirlo flotando no anadia nada. */
   var TILT   = { rigidez: 100, amort: 30, masa: 2 };
-  var FUNDE  = { rigidez: 200, amort: 30, masa: 1 };
-  var ROTULO = { rigidez: 350, amort: 30, masa: 1 };
-  var VAIVEN = 0.6;      // cuanto bascula el rotulo con la velocidad
   var AMPLITUD = 12;     // grados maximos de inclinacion
   var ESCALA_HOVER = 1.06;
 
   function armarBasculado(figura) {
     var carta = figura.querySelector('.pieza__carta');
-    var rotulo = figura.querySelector('.pieza__rotulo');
     if (!carta) return;
 
     var r = {
       giroX: new Resorte(0, TILT),
       giroY: new Resorte(0, TILT),
-      escala: new Resorte(1, TILT),
-      opacidad: new Resorte(0, FUNDE),
-      giroRotulo: new Resorte(0, ROTULO)
+      escala: new Resorte(1, TILT)
     };
-    var llaves = ['giroX', 'giroY', 'escala', 'opacidad', 'giroRotulo'];
-    var puntero = { x: 0, y: 0, ultimoY: 0 };
+    var llaves = ['giroX', 'giroY', 'escala'];
     var cuadro = null, tPrevio = 0;
 
     function pintar() {
       carta.style.transform =
         'rotateX(' + r.giroX.valor + 'deg) rotateY(' + r.giroY.valor + 'deg)' +
         ' scale(' + r.escala.valor + ')';
-      if (rotulo) {
-        rotulo.style.opacity = Math.min(Math.max(r.opacidad.valor, 0), 1);
-        rotulo.style.transform =
-          'translate(' + puntero.x + 'px, ' + puntero.y + 'px) rotate(' + r.giroRotulo.valor + 'deg)';
-      }
     }
 
     function marcha(t) {
@@ -660,26 +660,18 @@
 
       r.giroX.set((dy / (caja.height / 2)) * -AMPLITUD);
       r.giroY.set((dx / (caja.width / 2)) * AMPLITUD);
-      r.giroRotulo.set(-(dy - puntero.ultimoY) * VAIVEN);
-
-      puntero.x = e.clientX - caja.left;
-      puntero.y = e.clientY - caja.top;
-      puntero.ultimoY = dy;
       arrancar();
     });
 
     figura.addEventListener('mouseenter', function () {
       r.escala.set(ESCALA_HOVER);
-      r.opacidad.set(1);
       arrancar();
     });
 
     figura.addEventListener('mouseleave', function () {
       r.escala.set(1);
-      r.opacidad.set(0);
       r.giroX.set(0);
       r.giroY.set(0);
-      r.giroRotulo.set(0);
       arrancar();
     });
   }
@@ -756,8 +748,6 @@
     // transforma, asi que el vuelo encaja exacto.
     var carta = c.querySelector('.pieza__carta');
     if (carta) carta.style.transform = 'none';
-    var rot = c.querySelector('.pieza__rotulo');
-    if (rot) rot.parentNode.removeChild(rot);
     c.style.left = caja.left + 'px';
     c.style.top = caja.top + 'px';
     c.style.width = caja.width + 'px';

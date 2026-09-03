@@ -636,38 +636,6 @@ button { font: inherit; color: inherit; }
 
 .pieza__carta .plato__falta { z-index: 2; transform: translateZ(30px); }
 
-/* EL ROTULO — sigue al cursor y bascula con su velocidad. */
-.pieza__rotulo {
-  position: absolute;
-  top: 0; left: 0;
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0;
-  white-space: nowrap;
-  border-radius: var(--pastilla);
-  border: 1px solid rgba(246, 239, 225, 0.2);
-  background: rgba(26, 13, 6, 0.86);
-  color: rgba(246, 239, 225, 0.94);
-  padding: 6px 12px;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  box-shadow: 0 8px 20px rgba(26, 13, 6, 0.3);
-}
-@media not all and (hover: hover) and (pointer: fine) {
-  .pieza__rotulo { display: none; }
-}
-
-/* La ficha, ahora que la pieza tiene la pantalla para ella sola.
-
-   El nombre a un lado, el precio y la disponibilidad al otro, con
-   aire de verdad entre medias.
-
-   En columna propia y a media altura de la foto. Ya no es una fila
-   con el precio empujado al otro extremo: es una lista que baja
-   —referencia, nombre, precio, disponibilidad— con aire entre cada
-   cosa. */
 .pieza__ficha {
   display: grid;
   justify-items: start;
@@ -1021,5 +989,4 @@ button { font: inherit; color: inherit; }
   }
   .pieza__lamina { perspective: none; }
   .pieza__carta img { filter: none !important; }
-  .pieza__rotulo { display: none; }
 }
