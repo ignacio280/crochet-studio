@@ -430,7 +430,9 @@ button { font: inherit; color: inherit; }
    ============================================================ */
 
 .piezas {
-  --ancho-carta: clamp(240px, 30vw, 380px);
+  /* El ancho de la pieza: manda el paso del recorrido y el ancho
+     de la ficha. La foto no se ata a el, se ata al alto. */
+  --ancho-carta: min(72vw, 460px);
   --hueco: var(--s5);
   display: flex;
   gap: var(--hueco);
@@ -469,6 +471,13 @@ button { font: inherit; color: inherit; }
     scroll-snap-type: none;
     cursor: default;
     padding: 0;
+    /* Una a la vez, de verdad.
+
+       El hueco se estira hasta que cada paso mide una pantalla
+       entera: asi, con una pieza centrada, las vecinas quedan
+       justo fuera de la ventana. Antes asomaban por los bordes
+       porque el paso era del ancho de la carta y sobraba sitio. */
+    --hueco: calc(100vw - var(--ancho-carta));
     /* La primera y la ultima tambien se plantan en el centro. */
     padding-inline: calc(50vw - var(--ancho-carta) / 2);
     animation: correrTira linear both;
@@ -514,12 +523,21 @@ button { font: inherit; color: inherit; }
 
 /* LA FIGURA — lleva la perspectiva del basculado y el area
    sensible. Nunca se transforma, y por eso su tamanio de
-   disposicion sirve para medir el vuelo hacia la ficha. */
+   disposicion sirve para medir el vuelo hacia la ficha.
+
+   Se dimensiona por el ALTO y no por el ancho. Atada al ancho de
+   la pieza, una foto 4:5 crece un 25% mas de alto que de ancho y
+   empuja la ficha fuera de la pantalla; la escena recorta, asi
+   que el texto simplemente desaparecia. Midiendo desde el alto
+   disponible eso no puede pasar, y el ancho de la pieza queda
+   libre para que la ficha respire. */
 .pieza__lamina {
   position: relative;
   display: block;
-  width: 100%;
+  height: min(calc(100svh - 300px), calc(var(--ancho-carta) * 1.25));
+  width: auto;
   aspect-ratio: 4 / 5;
+  margin-inline: auto;
   perspective: 800px;
 }
 
@@ -581,46 +599,58 @@ button { font: inherit; color: inherit; }
   .pieza__rotulo { display: none; }
 }
 
+/* La ficha, ahora que la pieza tiene la pantalla para ella sola.
+
+   El nombre a un lado, el precio y la disponibilidad al otro, con
+   aire de verdad entre medias.
+
+   Va al ancho de la carta y no mas: la pieza es una celda de una
+   reja, asi que una ficha mas ancha estira la celda, y con ella la
+   figura, que se dimensiona al 100%. Se probo con 620 y la pieza
+   paso de 430 a 620 de ancho y de 690 a 938 de alto, sacando el
+   texto fuera de la pantalla. La separacion se consigue con el
+   hueco y el tamanio de letra, no ensanchando. */
 .pieza__ficha {
   align-self: start;
   width: 100%;
+  margin-top: var(--s3);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--s3);
+  gap: var(--s4) var(--s7);
 }
 
 .ficha__id {
-  font-family: var(--mono); font-size: var(--t-micro);
-  letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--tinta-45); margin: 0 0 var(--s2);
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--tinta-45); margin: 0 0 var(--s3);
   display: block;
 }
 .ficha__nombre {
   font-family: var(--serif); font-weight: 300;
-  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
-  line-height: 1.02; letter-spacing: -0.025em;
+  font-size: clamp(1.9rem, 4.2vw, 3.1rem);
+  line-height: 1.04; letter-spacing: -0.028em;
   color: var(--noche); margin: 0;
-  max-width: 16ch;
+  max-width: 14ch;
   display: block;
 }
-.ficha__derecha { display: grid; gap: var(--s3); justify-items: end; text-align: right; }
+.ficha__derecha { display: grid; gap: var(--s4); justify-items: end; text-align: right; }
 .ficha__precio {
-  font-family: var(--mono); font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+  font-family: var(--mono); font-size: clamp(1.1rem, 2vw, 1.5rem);
   color: var(--tinta); font-variant-numeric: tabular-nums;
 }
 .ficha__precio del { opacity: 0.45; margin-left: var(--s3); }
 
 .ficha__rareza {
-  display: flex; align-items: baseline; gap: var(--s2);
-  font-family: var(--mono); font-size: 10px;
-  letter-spacing: 0.16em; text-transform: uppercase;
+  display: flex; align-items: baseline; gap: var(--s3);
+  font-family: var(--mono); font-size: 12px;
+  letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--tinta-45);
 }
 .ficha__rareza b {
   font-family: var(--serif); font-weight: 300;
-  font-size: 1.75rem; line-height: 1;
+  font-size: 2.3rem; line-height: 1;
   color: var(--noche); font-variant-numeric: tabular-nums;
 }
 .rareza--no, .rareza--no b { color: var(--rosa-texto); }
