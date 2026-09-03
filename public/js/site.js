@@ -328,7 +328,8 @@
 
     function marco() {
       pedido = false;
-      var pegada = window.pageYOffset > 12;
+      // A los 100 px: encoge y se vuelve cristal.
+      var pegada = window.pageYOffset > 100;
       if (pegada !== pegadaAntes) { cab.classList.toggle('pegada', pegada); pegadaAntes = pegada; }
     }
 

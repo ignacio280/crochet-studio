@@ -215,18 +215,39 @@ button { font: inherit; color: inherit; }
   z-index: 60;
   background: rgba(246, 239, 225, 0);
   border-bottom: 1px solid transparent;
-  transition: background 0.4s var(--suave), border-color 0.4s var(--suave);
+  transition:
+    background 0.4s var(--suave),
+    border-color 0.4s var(--suave),
+    backdrop-filter 0.4s var(--suave);
 }
-/* Fondo opaco, sin desenfoque.
+.cabecera__fila {
+  transition: height 0.4s var(--suave);
+}
 
-   Un backdrop-filter obliga al navegador a releer y difuminar todo
-   lo que hay debajo en CADA cuadro. Con la pagina llena de capas
-   fijas y pegadas, eso se paga en scroll. Habia cuatro capas asi
-   —tres del degradado bajo la cabecera y esta— y se fueron las
-   cuatro. */
+/* A los 100 px la cabecera encoge un quinto y se vuelve cristal.
+
+   Sobre el desenfoque: en su dia se quitaron cuatro capas de
+   backdrop-filter porque cada una obliga al navegador a releer y
+   difuminar todo lo que hay debajo en cada cuadro, y con la pagina
+   llena de capas fijas eso se pagaba entero en el scroll. Esta es
+   UNA, y ya no compite con nada: el recorrido de las piezas lo
+   lleva el compositor y no hay mas capas pegadas. Una sola capa de
+   cristal si cabe en el presupuesto; cuatro no cabian.
+
+   El color va con alfa por debajo de 1 a proposito: un cristal
+   opaco no es un cristal, y el desenfoque no se veria. */
 .cabecera.pegada {
-  background: var(--papel);
+  background: rgba(246, 239, 225, 0.62);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
   border-bottom-color: var(--linea);
+}
+.cabecera.pegada .cabecera__fila { height: calc(var(--nav) * 0.8); }
+
+/* Si el navegador no sabe difuminar el fondo, se queda opaca: mas
+   vale una cabecera legible que un cristal a medias. */
+@supports not (backdrop-filter: blur(1px)) {
+  .cabecera.pegada { background: var(--papel); }
 }
 
 
@@ -549,6 +570,18 @@ button { font: inherit; color: inherit; }
   width: auto;
   aspect-ratio: 4 / 5;
   perspective: 800px;
+  /* La sombra vive AQUI y no en la foto.
+
+     En la foto se inclinaba con ella: al bascular, una sombra que
+     es plana por definicion se giraba en el espacio y aparecia
+     como una banda dura pegada a un borde —la esquina de abajo a
+     la derecha, sobre todo—. Puesta en la figura, que nunca se
+     transforma, se queda apoyada en el suelo mientras la copia se
+     mueve encima, que es como se comporta una sombra de verdad. */
+  box-shadow:
+    0 2px 3px rgba(46, 29, 15, 0.18),
+    0 16px 34px rgba(46, 29, 15, 0.15);
+  border-radius: 3px;
 }
 
 /* LA CARTA — lo que sigue al puntero. */
@@ -569,9 +602,6 @@ button { font: inherit; color: inherit; }
   border-radius: 3px;
   border: 1px solid var(--linea);
   background: var(--arena);
-  box-shadow:
-    0 2px 3px rgba(46, 29, 15, 0.20),
-    0 16px 34px rgba(46, 29, 15, 0.16);
   will-change: transform;
   transform: translateZ(0);
   /* Virada al sepia en reposo, a color al acercarse. */
