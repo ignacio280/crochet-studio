@@ -438,51 +438,187 @@
       '</div>';
 
     estado.focoPrevio = document.activeElement;
+    estado.desde = desde || null;
 
     function mostrar() {
-      $('universo').classList.add('abierto');
+      var u = $('universo');
+      u.classList.add('abierto');
       document.body.classList.add('sin-scroll');
+      if (!quieto.matches && typeof u.animate === 'function') {
+        u.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'linear' });
+      }
       $('universoCerrar').focus();
     }
 
-    if (desde && !quieto.matches && typeof desde.animate === 'function') expandir(desde, mostrar);
+    if (desde && !quieto.matches && typeof desde.animate === 'function') volarAdentro(desde);
     else mostrar();
   }
 
-  // La lámina crece desde donde está hasta llenar la pantalla.
-  function expandir(plato, listo) {
-    var r = plato.getBoundingClientRect();
-    var clon = plato.cloneNode(true);
-    clon.style.cssText =
-      'position:fixed;margin:0;z-index:210;transform:none;aspect-ratio:auto;pointer-events:none;' +
-      'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;';
-    document.body.appendChild(clon);
+  /* ---------------- El vuelo de la lamina ----------------
 
-    var anim = clon.animate([
-      { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' },
-      { left: '0px', top: '0px', width: '100vw', height: '100vh' }
-    ], { duration: 520, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+     El plato que se toco viaja hasta su lugar dentro de la ficha.
+     Se anima SOLO transform y opacity: el compositor las resuelve
+     sin tocar el hilo principal, y por eso el movimiento no se
+     traba aunque la pagina este haciendo otra cosa.
 
-    var cerrado = false;
-    function terminar() {
-      if (cerrado) return;
-      cerrado = true;
-      listo();
-      setTimeout(function () { clon.remove(); }, 240);
+     Antes se animaban left, top, width y height. Cada cuadro
+     obligaba al navegador a recalcular la disposicion entera, y el
+     destino era la pantalla completa: un plato de 4:5 estirado a
+     la forma de la ventana, con la foto deformandose durante todo
+     el viaje. Ahora el destino es la lamina de la ficha, que
+     tambien es 4:5, asi que basta una escala y la foto no se
+     deforma en ningun momento.
+
+     Todo lleva red de seguridad. Si una animacion no llega a
+     terminar —pestania de fondo, navegador que no la corre—, un
+     temporizador deja la ficha abierta igual. Nada que tenga
+     contenido depende de que una animacion ocurra. */
+
+  var CURVA = 'cubic-bezier(.22, 1, .36, 1)';
+
+  // El boton que se toca es la pieza entera: lamina mas ficha. Lo
+  // que vuela es solo la lamina, que es lo unico que tiene la
+  // misma forma —4:5— que su destino dentro de la ficha.
+  function laminaDe(el) {
+    return (el && el.querySelector && el.querySelector('.pieza__lamina')) || el;
+  }
+
+  // Un clon del plato, puesto en la caja que se le indique.
+  function clonVolador(plato, caja) {
+    var c = plato.cloneNode(true);
+    c.classList.add('vuelo');
+    c.style.setProperty('--t', 0);   // sin el giro ni el desenfoque
+    c.style.setProperty('--a', 0);   // que traiga del escenario
+    c.style.left = caja.left + 'px';
+    c.style.top = caja.top + 'px';
+    c.style.width = caja.width + 'px';
+    c.style.height = caja.height + 'px';
+    document.body.appendChild(c);
+    return c;
+  }
+
+  // La transformada que lleva una caja encima de otra, con origen
+  // arriba a la izquierda. Las dos son 4:5, asi que una sola
+  // escala vale para los dos ejes.
+  function llevarA(caja, hacia) {
+    return 'translate(' + (hacia.left - caja.left) + 'px, ' + (hacia.top - caja.top) + 'px)' +
+           ' scale(' + (hacia.width / caja.width) + ')';
+  }
+
+  function volarAdentro(pieza) {
+    var u = $('universo');
+    var plato = laminaDe(pieza);
+    var origen = plato.getBoundingClientRect();
+
+    // El destino no existe hasta que la ficha esta en la
+    // disposicion, asi que se abre primero y se mide despues.
+    u.classList.add('abierto', 'entrando');
+    document.body.classList.add('sin-scroll');
+
+    var lamina = u.querySelector('.universo__lamina');
+    if (!lamina) { u.classList.remove('entrando'); $('universoCerrar').focus(); return; }
+
+    var destino = lamina.getBoundingClientRect();
+    var clon = clonVolador(plato, destino);
+    lamina.style.visibility = 'hidden';
+
+    var DUR = 560;
+
+    clon.animate(
+      [{ transform: llevarA(destino, origen) }, { transform: 'none' }],
+      { duration: DUR, easing: CURVA, fill: 'both' });
+
+    // La ficha aparece con el plato todavia en el aire: al
+    // aterrizar ya hay algo debajo y no se siente un corte.
+    u.animate([{ opacity: 0 }, { opacity: 1 }],
+      { duration: 300, delay: DUR * 0.4, easing: 'linear', fill: 'both' });
+
+    // La columna de texto entra escalonada, detras del plato.
+    var partes = u.querySelectorAll('.universo__info > *');
+    for (var k = 0; k < partes.length; k++) {
+      partes[k].animate(
+        [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 520, delay: DUR * 0.45 + k * 60, easing: CURVA, fill: 'both' });
     }
-    anim.onfinish = terminar;
-    // Si la animación no llega a terminar, la ficha se abre igual.
-    setTimeout(terminar, 700);
+
+    var hecho = false;
+    function aterrizar() {
+      if (hecho) return;
+      hecho = true;
+      u.classList.remove('entrando');
+      lamina.style.visibility = '';
+      // La lamina de verdad vuelve un cuadro antes de que el clon
+      // desaparezca: el relevo queda debajo del mismo pixel.
+      requestAnimationFrame(function () { clon.remove(); });
+      $('universoCerrar').focus();
+    }
+    setTimeout(aterrizar, DUR);
+    setTimeout(aterrizar, 1200);
+  }
+
+  function volarAfuera(pieza, listo) {
+    var u = $('universo');
+    var lamina = u.querySelector('.universo__lamina');
+    var plato = laminaDe(pieza);
+    if (!lamina) { listo(); return; }
+
+    var desde = lamina.getBoundingClientRect();
+    var hacia = plato.getBoundingClientRect();
+    var clon = clonVolador(plato, desde);
+    lamina.style.visibility = 'hidden';
+
+    var DUR = 440;
+
+    // El texto se va primero y rapido; el plato se toma su tiempo
+    // en volver. Salir mas rapido que entrar es lo que hace que
+    // cerrar no se sienta lento.
+    u.animate([{ opacity: 1 }, { opacity: 0 }],
+      { duration: 220, easing: 'linear', fill: 'both' });
+
+    clon.animate([{ transform: 'none' }, { transform: llevarA(desde, hacia) }],
+      { duration: DUR, easing: CURVA, fill: 'both' });
+
+    var hecho = false;
+    function fin() {
+      if (hecho) return;
+      hecho = true;
+      clon.remove();
+      listo();
+    }
+    setTimeout(fin, DUR);
+    setTimeout(fin, 1000);
   }
 
   function cerrarUniverso() {
     var u = $('universo');
-    if (!u.classList.contains('abierto')) return;
-    u.classList.remove('abierto');
-    document.body.classList.remove('sin-scroll');
-    estado.abierto = null;
-    if (estado.focoPrevio && estado.focoPrevio.focus) estado.focoPrevio.focus();
-    estado.focoPrevio = null;
+    if (!u.classList.contains('abierto') || u.dataset.cerrando) return;
+
+    function rematar() {
+      u.classList.remove('abierto', 'entrando');
+      delete u.dataset.cerrando;
+      // Las animaciones con fill dejan su ultimo cuadro pegado. Sin
+      // cancelarlas, la ficha se quedaria con la opacidad del
+      // cierre y la proxima vez se abriria invisible.
+      if (u.getAnimations) {
+        u.getAnimations({ subtree: true }).forEach(function (a) { a.cancel(); });
+      }
+      var l = u.querySelector('.universo__lamina');
+      if (l) l.style.visibility = '';
+      document.body.classList.remove('sin-scroll');
+      estado.abierto = null;
+      estado.desde = null;
+      if (estado.focoPrevio && estado.focoPrevio.focus) estado.focoPrevio.focus();
+      estado.focoPrevio = null;
+    }
+
+    var plato = estado.desde;
+    if (plato && document.body.contains(plato) && !quieto.matches &&
+        typeof plato.animate === 'function') {
+      u.dataset.cerrando = '1';
+      volarAfuera(plato, rematar);
+    } else {
+      rematar();
+    }
   }
 
   // Con la ficha abierta, el tabulador no se escapa a la página.

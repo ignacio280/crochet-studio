@@ -631,9 +631,32 @@ button { font: inherit; color: inherit; }
   overflow-y: auto;
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  animation: entraUniverso 0.55s var(--entra) both;
+  /* La ficha tambien sin barra, como el resto del sitio. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-@keyframes entraUniverso { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+.universo__caja::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* Mientras el plato vuela, la ficha esta puesta pero no se ve:
+   hay que tenerla en la disposicion para poder medir donde va a
+   aterrizar. El JS la trae con una opacidad animada. */
+.universo.entrando { opacity: 0; }
+
+/* El clon que viaja entre el escenario y la ficha.
+
+   Va despues de .pieza__lamina a proposito: hereda su borde y su
+   forma, pero anula la posicion del escenario. El giro y el
+   desenfoque se apagan poniendo --t y --a en cero desde el JS, que
+   es mas limpio que pelear con !important. */
+.vuelo {
+  position: fixed;
+  margin: 0;
+  z-index: 210;
+  pointer-events: none;
+  transform-origin: top left;
+  will-change: transform;
+}
+.vuelo .plato__falta { display: none; }
 @media (max-width: 860px) { .universo__caja { grid-template-columns: 1fr; } }
 
 /* skill: beautiful-shadows, en su escalón "sm". SDB no usa Tailwind,
