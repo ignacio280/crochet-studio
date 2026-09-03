@@ -430,9 +430,10 @@ button { font: inherit; color: inherit; }
    ============================================================ */
 
 .piezas {
-  /* El ancho de la pieza: manda el paso del recorrido y el ancho
-     de la ficha. La foto no se ata a el, se ata al alto. */
-  --ancho-carta: min(72vw, 460px);
+  /* El ancho de la pieza entera: foto mas texto. Manda el paso del
+     recorrido, que sigue siendo una pantalla porque el hueco se
+     calcula contra el. */
+  --ancho-carta: min(90vw, 880px);
   --hueco: var(--s5);
   display: flex;
   gap: var(--hueco);
@@ -496,15 +497,25 @@ button { font: inherit; color: inherit; }
   }
 }
 
+/* La foto a un lado y el texto al otro.
+
+   Apilados competian por el alto: la foto es 4:5, asi que crece un
+   25% mas de alto que de ancho, y entre ella y la ficha no cabian
+   en una pantalla. La escena recorta, y lo que se recortaba era el
+   borde de arriba de la foto.
+
+   De lado ese pulso desaparece —cada uno tiene su columna— y de
+   paso el texto cae donde tiene sitio para respirar, alineado a la
+   mitad de la imagen. */
 .pieza {
   position: relative;
   flex: 0 0 auto;
   width: var(--ancho-carta);
   scroll-snap-align: center;
   display: grid;
-  grid-template-rows: auto 1fr;
-  gap: var(--s4);
-  align-content: start;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s8);
   padding: 0;
   background: none;
   border: 0;
@@ -534,10 +545,9 @@ button { font: inherit; color: inherit; }
 .pieza__lamina {
   position: relative;
   display: block;
-  height: min(calc(100svh - 300px), calc(var(--ancho-carta) * 1.25));
+  height: min(calc(100svh - 160px), 620px);
   width: auto;
   aspect-ratio: 4 / 5;
-  margin-inline: auto;
   perspective: 800px;
 }
 
@@ -604,21 +614,29 @@ button { font: inherit; color: inherit; }
    El nombre a un lado, el precio y la disponibilidad al otro, con
    aire de verdad entre medias.
 
-   Va al ancho de la carta y no mas: la pieza es una celda de una
-   reja, asi que una ficha mas ancha estira la celda, y con ella la
-   figura, que se dimensiona al 100%. Se probo con 620 y la pieza
-   paso de 430 a 620 de ancho y de 690 a 938 de alto, sacando el
-   texto fuera de la pantalla. La separacion se consigue con el
-   hueco y el tamanio de letra, no ensanchando. */
+   En columna propia y a media altura de la foto. Ya no es una fila
+   con el precio empujado al otro extremo: es una lista que baja
+   —referencia, nombre, precio, disponibilidad— con aire entre cada
+   cosa. */
 .pieza__ficha {
-  align-self: start;
-  width: 100%;
-  margin-top: var(--s3);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--s4) var(--s7);
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: var(--s5);
+  text-align: left;
+}
+
+/* En pantalla estrecha no hay dos columnas que valgan: la foto
+   arriba y el texto debajo, y la foto se achica para que quepan
+   los dos. */
+@media (max-width: 900px) {
+  .pieza {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--s5);
+  }
+  .pieza__lamina { height: min(calc(100svh - 320px), 460px); margin-inline: auto; }
+  .pieza__ficha { gap: var(--s4); }
 }
 
 .ficha__id {
@@ -629,13 +647,13 @@ button { font: inherit; color: inherit; }
 }
 .ficha__nombre {
   font-family: var(--serif); font-weight: 300;
-  font-size: clamp(1.9rem, 4.2vw, 3.1rem);
+  font-size: clamp(1.9rem, 4vw, 3rem);
   line-height: 1.04; letter-spacing: -0.028em;
   color: var(--noche); margin: 0;
-  max-width: 14ch;
+  max-width: 12ch;
   display: block;
 }
-.ficha__derecha { display: grid; gap: var(--s4); justify-items: end; text-align: right; }
+.ficha__derecha { display: grid; gap: var(--s4); justify-items: start; text-align: left; }
 .ficha__precio {
   font-family: var(--mono); font-size: clamp(1.1rem, 2vw, 1.5rem);
   color: var(--tinta); font-variant-numeric: tabular-nums;
