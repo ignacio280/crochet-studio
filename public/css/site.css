@@ -642,6 +642,20 @@ button { font: inherit; color: inherit; }
    aterrizar. El JS la trae con una opacidad animada. */
 .universo.entrando { opacity: 0; }
 
+/* Mientras el plato vuela, su sitio en el escenario queda vacio.
+
+   Si no, se ven las dos fotos a la vez: la que viaja y la que se
+   quedo puesta. La idea es que la foto se levante y se vaya, no
+   que aparezca una copia encima.
+
+   Va con visibility y no con opacity porque el clon la tapa
+   exactamente: no hay nada que suavizar, y una transicion de
+   opacidad en .pieza__lamina chocaria con el desenfoque que le
+   escribe el scroll. El texto y el numeral si se apagan animados,
+   desde el JS, para no ponerle una transicion permanente a una
+   opacidad que el scroll cambia en cada cuadro. */
+.pieza.volando .pieza__lamina { visibility: hidden; }
+
 /* El clon que viaja entre el escenario y la ficha.
 
    Va despues de .pieza__lamina a proposito: hereda su borde y su

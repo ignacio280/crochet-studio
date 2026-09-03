@@ -483,6 +483,35 @@
     return (el && el.querySelector && el.querySelector('.pieza__lamina')) || el;
   }
 
+  // El texto y el numeral de la pieza se apagan mientras su foto
+  // viaja. Se hace desde el JS y no con una transicion en la hoja
+  // de estilos porque esa opacidad la escribe el scroll en cada
+  // cuadro: una transicion permanente dejaria el relevo entre
+  // piezas arrastrandose 300 ms por detras.
+  function apagarOrigen(pieza) {
+    var partes = pieza.querySelectorAll('.pieza__ficha, .pieza__numeral');
+    var guardadas = [];
+    for (var i = 0; i < partes.length; i++) {
+      var el = partes[i];
+      var op = getComputedStyle(el).opacity;   // su valor real, no uno inventado
+      guardadas.push([el, op]);
+      el.animate([{ opacity: op }, { opacity: 0 }],
+        { duration: 300, easing: CURVA, fill: 'both' });
+    }
+    return guardadas;
+  }
+
+  function encenderOrigen(guardadas) {
+    if (!guardadas) return;
+    guardadas.forEach(function (par) {
+      par[0].getAnimations().forEach(function (a) { a.cancel(); });
+      // Sin fill: termina en el valor que le da la hoja de estilos,
+      // que es el que el scroll seguira mandando.
+      par[0].animate([{ opacity: 0 }, { opacity: par[1] }],
+        { duration: 320, easing: CURVA });
+    });
+  }
+
   // Un clon del plato, puesto en la caja que se le indique.
   function clonVolador(plato, caja) {
     var c = plato.cloneNode(true);
@@ -521,6 +550,11 @@
     var destino = lamina.getBoundingClientRect();
     var clon = clonVolador(plato, destino);
     lamina.style.visibility = 'hidden';
+
+    // El sitio de origen se vacia: la foto se va, no se duplica.
+    pieza.classList.add('volando');
+    estado.piezaVolando = pieza;
+    estado.origenApagado = apagarOrigen(pieza);
 
     var DUR = 560;
 
@@ -566,6 +600,10 @@
     var hacia = plato.getBoundingClientRect();
     var clon = clonVolador(plato, desde);
     lamina.style.visibility = 'hidden';
+    // La pieza se enciende mientras el plato vuelve, no despues:
+    // el texto ya esta puesto cuando la foto se planta.
+    encenderOrigen(estado.origenApagado);
+    estado.origenApagado = null;
 
     var DUR = 440;
 
@@ -582,8 +620,11 @@
     function fin() {
       if (hecho) return;
       hecho = true;
-      clon.remove();
-      listo();
+      // La lamina de verdad vuelve un cuadro antes que el clon se
+      // vaya, igual que al entrar: el relevo cae bajo el mismo pixel.
+      pieza.classList.remove('volando');
+      estado.piezaVolando = null;
+      requestAnimationFrame(function () { clon.remove(); listo(); });
     }
     setTimeout(fin, DUR);
     setTimeout(fin, 1000);
@@ -604,6 +645,13 @@
       }
       var l = u.querySelector('.universo__lamina');
       if (l) l.style.visibility = '';
+      // Red de seguridad: pase lo que pase, la pieza vuelve a estar.
+      if (estado.piezaVolando) {
+        estado.piezaVolando.classList.remove('volando');
+        estado.piezaVolando = null;
+      }
+      encenderOrigen(estado.origenApagado);
+      estado.origenApagado = null;
       document.body.classList.remove('sin-scroll');
       estado.abierto = null;
       estado.desde = null;
