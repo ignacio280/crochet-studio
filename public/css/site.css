@@ -350,11 +350,45 @@ button { font: inherit; color: inherit; }
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(62% 48% at 50% 46%, rgba(26,13,6,0.62), rgba(26,13,6,0.18) 70%, transparent),
-    linear-gradient(to bottom, rgba(26,13,6,0.42), transparent 26%, transparent 62%, rgba(26,13,6,0.72));
+    radial-gradient(70% 55% at 50% 46%, rgba(26,13,6,0.40), rgba(26,13,6,0.14) 70%, transparent),
+    linear-gradient(to bottom, rgba(26,13,6,0.42), transparent 26%, transparent 60%, rgba(26,13,6,0.74));
 }
 
-.portico__centro { text-align: center; position: relative; z-index: 1; }
+/* La cartela.
+
+   El nombre y su bajada caen sobre el encaje blanco, que es la
+   zona mas clara del cuadro y ademas cambia a lo largo del bucle.
+   Medido: sin esto, la bajada quedaba en 1,15 de contraste, muy
+   por debajo del 4,5 que pide un texto de 11px.
+
+   Asi que el conjunto lleva su propio fondo: una mancha oscura de
+   bordes difuminados que garantiza el contraste pase lo que pase
+   detras. No es un parche: una inscripcion sobre campo oscuro es
+   exactamente como se rotulaba en la epoca, y de paso concentra la
+   luz donde tiene que mirarse. */
+.portico__centro {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+}
+.portico__centro::before {
+  content: "";
+  position: absolute;
+  inset: -60% -38%;
+  z-index: -1;
+  pointer-events: none;
+  /* La fuerza no es a ojo. Medida sobre los fotogramas: en la
+     columna central el cuadro no tiene ninguna banda oscura —la
+     ventana y el encaje la dominan entera— y hasta en su punto mas
+     favorable un texto de 11px necesita un 67% de velo. De ahi el
+     nucleo al 92%: es lo que hace falta, no lo que quedaba bonito. */
+  background: radial-gradient(56% 56% at 50% 50%,
+    rgba(26, 13, 6, 0.94) 0%,
+    rgba(26, 13, 6, 0.86) 55%,
+    rgba(26, 13, 6, 0.40) 75%,
+    transparent 90%);
+}
 
 .portico__marca {
   font-family: var(--serif); font-weight: 300;
@@ -369,7 +403,7 @@ button { font: inherit; color: inherit; }
 .portico__pie {
   font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: 0.24em; text-transform: uppercase;
-  color: #d6c3a0;
+  color: #ece0c8;
   margin: var(--s4) 0 0;
   text-shadow: 0 1px 12px rgba(26,13,6,0.7);
 }
