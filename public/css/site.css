@@ -570,18 +570,24 @@ button { font: inherit; color: inherit; }
   width: auto;
   aspect-ratio: 4 / 5;
   perspective: 800px;
-  /* La sombra vive AQUI y no en la foto.
+  /* La figura no pinta NADA: ni fondo, ni borde, ni sombra.
 
-     En la foto se inclinaba con ella: al bascular, una sombra que
-     es plana por definicion se giraba en el espacio y aparecia
-     como una banda dura pegada a un borde —la esquina de abajo a
-     la derecha, sobre todo—. Puesta en la figura, que nunca se
-     transforma, se queda apoyada en el suelo mientras la copia se
-     mueve encima, que es como se comporta una sombra de verdad. */
-  box-shadow:
-    0 2px 3px rgba(46, 29, 15, 0.18),
-    0 16px 34px rgba(46, 29, 15, 0.15);
-  border-radius: 3px;
+     Es solo un hueco con perspectiva y el area que recibe el
+     puntero. Y tiene que seguir asi.
+
+     La sombra estuvo primero en la foto y se inclinaba con ella:
+     una sombra es plana por definicion, y al girarla en el espacio
+     salia como una banda dura pegada a un borde. Se movio aqui, a
+     un elemento que no se transforma, y el problema cambio de
+     forma pero no se fue: mientras la copia se inclina y crece, la
+     caja de la figura se queda quieta, asi que su sombra dibujaba
+     un rectangulo desplazado detras —un borde raro que no era de
+     nada—.
+
+     La leccion: cualquier cosa que se pinte aqui aparece como un
+     segundo recuadro en cuanto la copia se mueve. Si algun dia
+     hace falta sombra, tiene que ir en la copia y moverse con
+     ella, no quedarse debajo. */
 }
 
 /* LA CARTA — lo que sigue al puntero. */
