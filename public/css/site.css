@@ -214,6 +214,13 @@ button { font: inherit; color: inherit; }
 .cabecera:not(.pegada) .indice a:hover { color: #f4ead6; }
 .cabecera:not(.pegada) .menu-boton span { background: #f4ead6; }
 
+/* Revelado el paisaje, el fondo de arriba es cielo claro: la
+   cabecera tiene que darse vuelta o desaparece. */
+body.portico-abierto .cabecera:not(.pegada) .marca { color: var(--noche); text-shadow: none; }
+body.portico-abierto .cabecera:not(.pegada) .indice a { color: var(--tinta-70); text-shadow: none; }
+body.portico-abierto .cabecera:not(.pegada) .indice a:hover { color: var(--noche); }
+body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(--noche); }
+
 .cabecera.pegada {
   background: rgba(246, 239, 225, 0.92);
   backdrop-filter: blur(12px);
@@ -308,23 +315,36 @@ button { font: inherit; color: inherit; }
 }
 
 /* ============================================================
-   PORTICO — la habitacion pintada
+   PORTICO — asomarse por la ventana
 
-   El sitio ya no abre con una pantalla en blanco: abre dentro de
-   un cuadro. El video recorre el dia hasta la noche y vuelve, con
-   lo que el bucle cierra sin corte visible.
+   Tres estados, y el orden importa:
 
-   El velo no es decoracion. El video pasa de claro a oscuro, asi
-   que sin el, el nombre seria ilegible la mitad del bucle. Con el
-   velo el texto siempre va claro sobre oscuro, en los dos
-   extremos.
+   1. REPOSO. El primer fotograma, quieto: la habitacion pintada.
+      No hay nombre, no hay nada. Solo el cuadro.
+   2. CORRIENDO. La camara sale por la ventana.
+   3. REVELADO. El ultimo fotograma se congela sobre el paisaje y
+      recien ahi aparece el nombre.
+
+   El disparador es invisible a la vista pero es un <button> de
+   verdad: se tabula, se activa con teclado y se anuncia. Sin eso,
+   una superficie que solo responde al clic del raton deja fuera a
+   quien navega con teclado.
+
+   Y hay red de seguridad: si nadie toca nada, arranca solo a los
+   4,5 segundos. Un boton invisible no tiene ninguna pista visual,
+   asi que sin esto una parte de las visitas no veria nunca el
+   nombre de la tienda. Para exigir el clic y nada mas, quitar el
+   temporizador en site.js.
+
+   El nombre va en TINTA OSCURA, no en crema, porque el fotograma
+   final es un paisaje claro: medido sobre el cielo da 14,1 de
+   contraste en oscuro y 1,37 en crema. Lo de abajo se queda en
+   crema, que ahi el paisaje es oscuro: 8,9 y 9,4.
    ============================================================ */
 
 .portico {
   position: relative;
   min-height: 100svh;
-  display: grid;
-  place-items: center;
   padding: calc(var(--nav) + var(--s8)) var(--margen) var(--s9);
   overflow: hidden;
   background: var(--noche);
@@ -335,9 +355,13 @@ button { font: inherit; color: inherit; }
   position: absolute;
   inset: 0;
   z-index: -2;
-  /* El cartel se ve antes que el video, y es lo unico que se ve si
-     el video no llega a correr. */
-  background: url('/video/taller.webp') center / cover no-repeat, var(--noche);
+  background: url('/video/ventana-inicio.webp') center / cover no-repeat, var(--noche);
+}
+/* Al terminar, el fotograma final queda de fondo ademas del video
+   detenido: si el navegador soltara el ultimo cuadro, la imagen
+   sigue ahi y el nombre nunca queda flotando sobre negro. */
+.portico.revelado .portico__fondo {
+  background: url('/video/ventana-final.webp') center / cover no-repeat, var(--noche);
 }
 .portico__video {
   width: 100%; height: 100%;
@@ -345,73 +369,98 @@ button { font: inherit; color: inherit; }
   display: block;
 }
 
+/* En reposo el cuadro se ve entero. Al revelar, solo queda la
+   sombra de abajo, que es la que sostiene el texto claro. */
 .portico__velo {
   position: absolute;
   inset: 0;
   z-index: -1;
+  transition: background 1.1s var(--suave);
   background:
-    radial-gradient(70% 55% at 50% 46%, rgba(26,13,6,0.40), rgba(26,13,6,0.14) 70%, transparent),
+    radial-gradient(70% 55% at 50% 46%, rgba(26,13,6,0.30), rgba(26,13,6,0.10) 70%, transparent),
     linear-gradient(to bottom, rgba(26,13,6,0.42), transparent 26%, transparent 60%, rgba(26,13,6,0.74));
 }
-
-/* La cartela.
-
-   El nombre y su bajada caen sobre el encaje blanco, que es la
-   zona mas clara del cuadro y ademas cambia a lo largo del bucle.
-   Medido: sin esto, la bajada quedaba en 1,15 de contraste, muy
-   por debajo del 4,5 que pide un texto de 11px.
-
-   Asi que el conjunto lleva su propio fondo: una mancha oscura de
-   bordes difuminados que garantiza el contraste pase lo que pase
-   detras. No es un parche: una inscripcion sobre campo oscuro es
-   exactamente como se rotulaba en la epoca, y de paso concentra la
-   luz donde tiene que mirarse. */
-.portico__centro {
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  isolation: isolate;
+.portico.revelado .portico__velo {
+  background: linear-gradient(to bottom, rgba(26,13,6,0.20), transparent 20%, transparent 58%, rgba(26,13,6,0.78));
 }
-.portico__centro::before {
-  content: "";
+
+/* El disparador: toda la portada, invisible, pero enfocable. */
+.portico__disparo {
   position: absolute;
-  inset: -60% -38%;
-  z-index: -1;
+  inset: 0;
+  z-index: 3;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.portico__disparo:focus-visible {
+  outline: 2px solid #f4ead6;
+  outline-offset: -14px;
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* El nombre vive en el cielo del fotograma final. */
+/* Al reves de lo que pide el instinto: el estado por defecto es
+   VISIBLE, y lo que esconde es la clase que pone el JavaScript.
+
+   Si se escribiera al reves —oculto por defecto, visible al
+   revelar— bastaria que el script no corriera para que el nombre
+   de la tienda no apareciera nunca. Ya me paso una vez con la
+   portada anterior. Sin JavaScript aca no hay viaje, pero el
+   nombre, la cuenta y el enlace estan puestos desde el principio. */
+.portico__centro {
+  position: absolute;
+  left: var(--margen); right: var(--margen);
+  top: 21%;
+  z-index: 2;
+  text-align: center;
+  transition: opacity 1.2s var(--suave) 0.15s, transform 1.2s var(--entra) 0.15s;
+}
+body.portico-cerrado .portico__centro {
+  opacity: 0;
   pointer-events: none;
-  /* La fuerza no es a ojo. Medida sobre los fotogramas: en la
-     columna central el cuadro no tiene ninguna banda oscura —la
-     ventana y el encaje la dominan entera— y hasta en su punto mas
-     favorable un texto de 11px necesita un 67% de velo. De ahi el
-     nucleo al 92%: es lo que hace falta, no lo que quedaba bonito. */
-  background: radial-gradient(56% 56% at 50% 50%,
-    rgba(26, 13, 6, 0.94) 0%,
-    rgba(26, 13, 6, 0.86) 55%,
-    rgba(26, 13, 6, 0.40) 75%,
-    transparent 90%);
+  transform: translateY(18px);
 }
 
 .portico__marca {
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(3.4rem, 13vw, 9rem);
   line-height: 0.9; letter-spacing: -0.04em;
-  color: #f4ead6;
+  color: var(--noche);
   margin: 0;
-  text-shadow: 0 2px 24px rgba(26,13,6,0.55);
 }
 .portico__marca .letra { display: inline-block; }
 
 .portico__pie {
   font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: 0.24em; text-transform: uppercase;
-  color: #ece0c8;
+  color: var(--tinta-70);
   margin: var(--s4) 0 0;
-  text-shadow: 0 1px 12px rgba(26,13,6,0.7);
 }
 
-.portico__cuenta {
+.portico__cuenta,
+.portico__baja {
   position: absolute;
+  z-index: 2;
+  transition: opacity 1s var(--suave) 0.55s, transform 1s var(--suave) 0.55s;
+}
+body.portico-cerrado .portico__cuenta,
+body.portico-cerrado .portico__baja { opacity: 0; transform: translateY(14px); }
+
+.portico__cuenta {
   left: var(--margen); bottom: var(--s8);
-  z-index: 1;
   font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: 0.16em; text-transform: uppercase;
   color: #cbb894;
@@ -425,9 +474,7 @@ button { font: inherit; color: inherit; }
 }
 
 .portico__baja {
-  position: absolute;
   right: var(--margen); bottom: var(--s8);
-  z-index: 1;
   font-family: var(--mono); font-size: 10px;
   letter-spacing: 0.16em; text-transform: uppercase;
   color: #cbb894;
@@ -446,16 +493,20 @@ button { font: inherit; color: inherit; }
 }
 
 @media (max-width: 620px) {
-  .portico__cuenta, .portico__baja { position: static; margin-top: var(--s7); }
-  .portico__cuenta { justify-items: center; text-align: center; }
+  .portico__centro { top: 17%; }
   .portico__baja { display: none; }
 }
 
+/* El nombre de la cabecera tampoco se adelanta al revelado. Misma
+   regla: esconde la clase, no el estado por defecto. */
+.cabecera .marca { transition: opacity 0.8s var(--suave); }
+body.portico-cerrado .cabecera .marca { opacity: 0; pointer-events: none; }
+
 @media (prefers-reduced-motion: no-preference) {
-  .anima .portico__marca .letra { animation: entraLetra 0.7s var(--muelle) backwards; animation-delay: calc(var(--i) * 60ms + 0.1s); }
-  .anima .portico__pie    { animation: sube 0.6s var(--suave) 0.3s backwards; }
-  .anima .portico__cuenta { animation: sube 0.6s var(--suave) 0.4s backwards; }
-  .anima .portico__baja   { animation: sube 0.6s var(--suave) 0.5s backwards; }
+  .portico.revelado .portico__marca .letra {
+    animation: entraLetra 0.7s var(--muelle) backwards;
+    animation-delay: calc(var(--i) * 60ms + 0.2s);
+  }
 }
 @keyframes entraLetra { from { opacity: 0; transform: translateY(0.4em) rotate(2deg); } to { opacity: 1; transform: none; } }
 @keyframes sube       { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
@@ -909,8 +960,12 @@ button { font: inherit; color: inherit; }
   .aparece { opacity: 1; transform: none; }
   .cursor { display: none !important; }
   .desenfoque { display: none; }
-  /* Queda el cartel: el mismo cuadro, quieto. */
+  /* Sin viaje: se muestra directamente el paisaje del final, con
+     el nombre puesto. No se pierde nada mas que el trayecto. */
   .portico__video { display: none; }
+  .portico__disparo { display: none; }
+  .portico__centro, .portico__cuenta, .portico__baja { opacity: 1 !important; transform: none !important; }
+  .portico.revelado .portico__marca .letra { animation: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
   .piezas { height: auto !important; }

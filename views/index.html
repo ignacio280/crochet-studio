@@ -12,7 +12,7 @@
 <link rel="preload" href="/fonts/garamond-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/plexmono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/letras.css?v=2">
-<link rel="stylesheet" href="/css/site.css?v=24">
+<link rel="stylesheet" href="/css/site.css?v=26">
 </head>
 <body>
 
@@ -49,18 +49,25 @@
 <main id="inicio">
 
   <!-- ================= PORTICO =================
-       Se entra por una habitacion pintada. El video va de dia a
-       noche y vuelve, asi que el bucle cierra sin corte. Mudo y en
-       linea, que es lo que exige la reproduccion automatica. -->
-  <section class="portico">
+       Se entra por una habitacion pintada y se sale por la ventana.
+       El video no arranca solo: hay un disparador invisible que
+       cubre la portada. Al terminar, el ultimo fotograma se queda
+       quieto y recien ahi aparece el nombre. -->
+  <section class="portico" id="portico">
     <div class="portico__fondo" aria-hidden="true">
-      <video class="portico__video" autoplay muted loop playsinline
-             preload="metadata" poster="/video/taller.webp"
-             aria-hidden="true" tabindex="-1">
-        <source src="/video/taller.mp4" type="video/mp4">
+      <video class="portico__video" id="porticoVideo"
+             muted playsinline preload="auto"
+             poster="/video/ventana-inicio.webp" aria-hidden="true" tabindex="-1">
+        <source src="/video/ventana.mp4" type="video/mp4">
       </video>
     </div>
     <div class="portico__velo" aria-hidden="true"></div>
+
+    <!-- Invisible a la vista, pero es un boton de verdad: se puede
+         tabular y activar con el teclado, y se anuncia. -->
+    <button class="portico__disparo" id="porticoDisparo" type="button" data-cursor="abrir">
+      <span class="solo-lectores">Asomarse por la ventana</span>
+    </button>
 
     <div class="portico__centro">
       <h1 class="portico__marca" id="umbralMarca">{{MARCA}}</h1>
@@ -130,6 +137,6 @@
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
-<script src="/js/site.js?v=14"></script>
+<script src="/js/site.js?v=16"></script>
 </body>
 </html>

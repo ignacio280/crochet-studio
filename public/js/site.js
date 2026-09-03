@@ -338,7 +338,8 @@
   /* ---------------- Cursor ----------------
      Nombra la acción. Solo donde hay puntero fino. */
 
-  var ROTULOS = { ver: 'Ver', explorar: 'Explorar', pedir: 'Pedir', ir: 'Ir', cerrar: 'Cerrar' };
+  var ROTULOS = { ver: 'Ver', explorar: 'Explorar', pedir: 'Pedir', ir: 'Ir',
+                  cerrar: 'Cerrar', abrir: 'Asomarse' };
 
   function armarCursor() {
     if (!finoYconHover.matches || quieto.matches) return;
@@ -540,6 +541,76 @@
     });
   }
 
+  /* ---------------- El portico ----------------
+
+     Tres estados: el cuadro quieto, la camara saliendo por la
+     ventana, y el paisaje congelado con el nombre encima.
+
+     El disparador es invisible, y eso tiene un costo: no hay
+     ninguna pista de que haya algo que tocar. Por eso hay tres
+     formas de abrirlo —clic o teclado, el primer scroll, o un
+     temporizador de 4,5 segundos— y no una sola. Sin la red, una
+     parte de las visitas no veria nunca el nombre de la tienda.
+     Para exigir el clic y nada mas, borrar la linea del setTimeout. */
+
+  function armarPortico() {
+    var caja = $('portico');
+    var video = $('porticoVideo');
+    if (!caja || !video) return;
+
+    var boton = $('porticoDisparo');
+    var lanzado = false, revelado = false, red = null, seguro = null;
+
+    function revelar() {
+      if (revelado) return;
+      revelado = true;
+      clearTimeout(red); clearInterval(seguro);
+      caja.classList.remove('corriendo');
+      caja.classList.add('revelado');
+      document.body.classList.remove('portico-cerrado');
+      document.body.classList.add('portico-abierto');
+      if (boton && boton.parentNode) boton.parentNode.removeChild(boton);
+    }
+
+    function lanzar() {
+      if (lanzado) return;
+      lanzado = true;
+      clearTimeout(red);
+
+      if (quieto.matches) { revelar(); return; }
+
+      caja.classList.add('corriendo');
+      // Si el navegador se niega a reproducir, no se puede dejar la
+      // portada trabada: se revela igual.
+      var promesa = video.play();
+      if (promesa && promesa.catch) promesa.catch(revelar);
+
+      // Vigilante de progreso, no un plazo fijo. Un plazo cortaria
+      // el video en una conexion lenta —o en una pestana de fondo,
+      // donde el navegador estrangula la reproduccion—. Esto solo
+      // se rinde cuando el video deja de avanzar de verdad.
+      var ultimo = -1, quieto_desde = Date.now();
+      seguro = setInterval(function () {
+        if (revelado) { clearInterval(seguro); return; }
+        if (video.currentTime > ultimo + 0.01) {
+          ultimo = video.currentTime;
+          quieto_desde = Date.now();
+        } else if (Date.now() - quieto_desde > 6000) {
+          clearInterval(seguro);
+          revelar();
+        }
+      }, 500);
+    }
+
+    video.addEventListener('ended', revelar);
+    if (boton) boton.addEventListener('click', lanzar);
+    addEventListener('scroll', lanzar, { passive: true, once: true });
+
+    if (quieto.matches) { revelar(); return; }
+    document.body.classList.add('portico-cerrado');
+    red = setTimeout(lanzar, 4500);
+  }
+
   /* ---------------- Arranque ----------------
 
      La entrada se habilita solo si la página se está viendo. Si
@@ -555,6 +626,7 @@
 
   habilitarEntrada();
   armarUmbral();
+  armarPortico();
   armarCursor();
 
   fetch('/api/site')
