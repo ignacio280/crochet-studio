@@ -88,7 +88,17 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Fuera la barra de desplazamiento. Se sigue pudiendo desplazar
+     igual —rueda, dedo, teclado, arrastre—; lo que se pierde es
+     poder arrastrar la barra con el raton y ver de un vistazo cuanto
+     queda. Es una decision de estilo, no gratis. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 body {
   margin: 0;
@@ -315,51 +325,52 @@ body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(-
 }
 
 /* ============================================================
-   PORTICO — asomarse por la ventana
+   PORTICO — la camara sale por la ventana
 
-   Tres estados, y el orden importa:
+   El video no se reproduce: lo arrastra el scroll. La pagina
+   empuja la camara fuera de la habitacion, y al final del
+   recorrido el cuadro se queda quieto sobre el paisaje y aparece
+   el nombre.
 
-   1. REPOSO. El primer fotograma, quieto: la habitacion pintada.
-      No hay nombre, no hay nada. Solo el cuadro.
-   2. CORRIENDO. La camara sale por la ventana.
-   3. REVELADO. El ultimo fotograma se congela sobre el paisaje y
-      recien ahi aparece el nombre.
+   Reemplaza al boton invisible, y sale ganando: no hay que
+   adivinar que hay algo que tocar, funciona igual con dedo que con
+   rueda, y el avance es reversible —se sube y la camara vuelve
+   adentro—.
 
-   El disparador es invisible a la vista pero es un <button> de
-   verdad: se tabula, se activa con teclado y se anuncia. Sin eso,
-   una superficie que solo responde al clic del raton deja fuera a
-   quien navega con teclado.
+   Para que esto se pueda arrastrar, el video esta codificado con
+   un fotograma clave cada 0,25 s. El encode anterior tenia UNO
+   para los ocho segundos: cada salto obligaba a decodificar desde
+   el principio y se veia a tirones.
 
-   Y hay red de seguridad: si nadie toca nada, arranca solo a los
-   4,5 segundos. Un boton invisible no tiene ninguna pista visual,
-   asi que sin esto una parte de las visitas no veria nunca el
-   nombre de la tienda. Para exigir el clic y nada mas, quitar el
-   temporizador en site.js.
-
-   El nombre va en TINTA OSCURA, no en crema, porque el fotograma
-   final es un paisaje claro: medido sobre el cielo da 14,1 de
-   contraste en oscuro y 1,37 en crema. Lo de abajo se queda en
-   crema, que ahi el paisaje es oscuro: 8,9 y 9,4.
+   Ya no hay velo: el negro delante del cuadro se fue. Los textos
+   se sostienen solos —medido sobre el fotograma final, el nombre
+   en tinta oscura sobre el cielo da 14,1 y lo de abajo en crema
+   sobre el prado oscuro da 8,9—.
    ============================================================ */
 
 .portico {
   position: relative;
-  min-height: 100svh;
-  padding: calc(var(--nav) + var(--s8)) var(--margen) var(--s9);
-  overflow: hidden;
+  /* El alto lo escribe el JS: una pantalla mas el recorrido. */
   background: var(--noche);
+}
+
+.portico__escenario {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
   isolation: isolate;
 }
 
 .portico__fondo {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: -1;
   background: url('/video/ventana-inicio.webp') center / cover no-repeat, var(--noche);
 }
-/* Al terminar, el fotograma final queda de fondo ademas del video
-   detenido: si el navegador soltara el ultimo cuadro, la imagen
-   sigue ahi y el nombre nunca queda flotando sobre negro. */
+/* Al llegar al final se cambia al fotograma fijo, que es de mas
+   resolucion que el video: el cuadro se mira quieto un rato y ahi
+   si se nota la nitidez. */
 .portico.revelado .portico__fondo {
   background: url('/video/ventana-final.webp') center / cover no-repeat, var(--noche);
 }
@@ -368,38 +379,7 @@ body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(-
   object-fit: cover;
   display: block;
 }
-
-/* En reposo el cuadro se ve entero. Al revelar, solo queda la
-   sombra de abajo, que es la que sostiene el texto claro. */
-.portico__velo {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  transition: background 1.1s var(--suave);
-  background:
-    radial-gradient(70% 55% at 50% 46%, rgba(26,13,6,0.30), rgba(26,13,6,0.10) 70%, transparent),
-    linear-gradient(to bottom, rgba(26,13,6,0.42), transparent 26%, transparent 60%, rgba(26,13,6,0.74));
-}
-.portico.revelado .portico__velo {
-  background: linear-gradient(to bottom, rgba(26,13,6,0.20), transparent 20%, transparent 58%, rgba(26,13,6,0.78));
-}
-
-/* El disparador: toda la portada, invisible, pero enfocable. */
-.portico__disparo {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
-}
-.portico__disparo:focus-visible {
-  outline: 2px solid #f4ead6;
-  outline-offset: -14px;
-}
+.portico.revelado .portico__video { opacity: 0; }
 
 .solo-lectores {
   position: absolute;
@@ -411,22 +391,18 @@ body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(-
   border: 0;
 }
 
-/* El nombre vive en el cielo del fotograma final. */
-/* Al reves de lo que pide el instinto: el estado por defecto es
-   VISIBLE, y lo que esconde es la clase que pone el JavaScript.
+/* El nombre vive en el cielo del fotograma final.
 
-   Si se escribiera al reves —oculto por defecto, visible al
-   revelar— bastaria que el script no corriera para que el nombre
-   de la tienda no apareciera nunca. Ya me paso una vez con la
-   portada anterior. Sin JavaScript aca no hay viaje, pero el
-   nombre, la cuenta y el enlace estan puestos desde el principio. */
+   Visible por defecto: lo que esconde es la clase que pone el
+   JavaScript. Si el script no corre no hay viaje, pero el nombre,
+   la cuenta y el enlace estan puestos desde el principio. */
 .portico__centro {
   position: absolute;
   left: var(--margen); right: var(--margen);
   top: 21%;
   z-index: 2;
   text-align: center;
-  transition: opacity 1.2s var(--suave) 0.15s, transform 1.2s var(--entra) 0.15s;
+  transition: opacity 0.9s var(--suave), transform 0.9s var(--entra);
 }
 body.portico-cerrado .portico__centro {
   opacity: 0;
@@ -454,7 +430,7 @@ body.portico-cerrado .portico__centro {
 .portico__baja {
   position: absolute;
   z-index: 2;
-  transition: opacity 1s var(--suave) 0.55s, transform 1s var(--suave) 0.55s;
+  transition: opacity 0.8s var(--suave) 0.25s, transform 0.8s var(--suave) 0.25s;
 }
 body.portico-cerrado .portico__cuenta,
 body.portico-cerrado .portico__baja { opacity: 0; transform: translateY(14px); }
@@ -465,7 +441,7 @@ body.portico-cerrado .portico__baja { opacity: 0; transform: translateY(14px); }
   letter-spacing: 0.16em; text-transform: uppercase;
   color: #cbb894;
   display: grid; gap: var(--s1);
-  text-shadow: 0 1px 12px rgba(26,13,6,0.7);
+  text-shadow: 0 1px 14px rgba(26,13,6,0.8);
 }
 .portico__cuenta b {
   font-family: var(--serif); font-weight: 300;
@@ -479,7 +455,7 @@ body.portico-cerrado .portico__baja { opacity: 0; transform: translateY(14px); }
   letter-spacing: 0.16em; text-transform: uppercase;
   color: #cbb894;
   display: inline-flex; flex-direction: column; align-items: center; gap: var(--s2);
-  text-shadow: 0 1px 12px rgba(26,13,6,0.7);
+  text-shadow: 0 1px 14px rgba(26,13,6,0.8);
 }
 .portico__baja::after {
   content: ""; width: 1px; height: 26px;
@@ -505,7 +481,7 @@ body.portico-cerrado .cabecera .marca { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: no-preference) {
   .portico.revelado .portico__marca .letra {
     animation: entraLetra 0.7s var(--muelle) backwards;
-    animation-delay: calc(var(--i) * 60ms + 0.2s);
+    animation-delay: calc(var(--i) * 55ms);
   }
 }
 @keyframes entraLetra { from { opacity: 0; transform: translateY(0.4em) rotate(2deg); } to { opacity: 1; transform: none; } }
@@ -960,10 +936,12 @@ body.portico-cerrado .cabecera .marca { opacity: 0; pointer-events: none; }
   .aparece { opacity: 1; transform: none; }
   .cursor { display: none !important; }
   .desenfoque { display: none; }
-  /* Sin viaje: se muestra directamente el paisaje del final, con
-     el nombre puesto. No se pierde nada mas que el trayecto. */
+  /* Sin viaje: el paisaje del final con el nombre puesto. No se
+     pierde nada mas que el trayecto. */
+  .portico { height: auto !important; }
+  .portico__escenario { position: static; height: 100svh; }
   .portico__video { display: none; }
-  .portico__disparo { display: none; }
+  .portico__fondo { background: url('/video/ventana-final.webp') center / cover no-repeat, var(--noche); }
   .portico__centro, .portico__cuenta, .portico__baja { opacity: 1 !important; transform: none !important; }
   .portico.revelado .portico__marca .letra { animation: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
