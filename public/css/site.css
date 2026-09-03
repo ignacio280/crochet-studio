@@ -421,19 +421,34 @@ button { font: inherit; color: inherit; }
    se componen: la columna arrastra, la baldosa se asoma y la carta
    sigue al raton dentro de ella.
 
-   La perspectiva va en la reja, y preserve-3d en la columna y en
-   la baldosa. Lo de la columna es un anadido: la perspectiva solo
-   alcanza a los hijos directos, y la columna lleva su propia
-   transformada, que aplanaria a los suyos. Sin esa linea el
-   rotateX de las fotos no se veria como inclinacion sino como un
-   achatamiento.
+   LA PERSPECTIVA VA EN LA COLUMNA, NO EN LA REJA
+
+   El fuente la pone en la reja. Pero la perspectiva solo alcanza a
+   los hijos directos —las columnas—, no a las baldosas, asi que la
+   inclinacion no se veria como tal sino como un achatamiento
+   vertical.
+
+   El primer arreglo fue ponerle preserve-3d a la columna para que
+   la perspectiva la atravesara. Funcionaba, y traia un fallo feo:
+   con preserve-3d la columna y sus baldosas comparten un mismo
+   espacio en tres dimensiones, y el navegador las ordena por
+   profundidad. La parte de la baldosa que se aleja del ojo —el
+   borde de abajo cuando la pieza esta por encima del centro—
+   quedaba DETRAS de la caja de su propia columna. Seguia
+   viendose, pero dejaba de recibir el puntero: el cuarto inferior
+   de cada foto no respondia al basculado.
+
+   Poniendo la perspectiva en la columna se arregla de raiz. Las
+   baldosas son hijas directas suyas, asi que la reciben; y la
+   columna deja de estar en el mismo espacio tridimensional que
+   ellas, asi que no hay nada que ordenar ni nada que se ponga
+   delante.
    ============================================================ */
 
 .piezas {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  perspective: 1200px;
   max-width: var(--ancho);
   margin: 0 auto;
   padding: var(--s8) var(--margen) var(--s10);
@@ -443,9 +458,20 @@ button { font: inherit; color: inherit; }
   display: flex;
   flex-direction: column;
   gap: 24px;
-  transform-style: preserve-3d;
+  perspective: 1200px;
   will-change: transform;
 }
+
+/* El angulo de reposo de cada copia. Se reparte por columna y por
+   posicion dentro de ella: seis angulos distintos, siempre los
+   mismos al recargar. Un desorden que cambia solo no es desorden,
+   es ruido. */
+.columna:nth-child(1) .pieza:nth-child(odd)  { --giro: -2.4deg; }
+.columna:nth-child(1) .pieza:nth-child(even) { --giro:  1.9deg; }
+.columna:nth-child(2) .pieza:nth-child(odd)  { --giro:  1.3deg; }
+.columna:nth-child(2) .pieza:nth-child(even) { --giro: -3.1deg; }
+.columna:nth-child(3) .pieza:nth-child(odd)  { --giro: -1.1deg; }
+.columna:nth-child(3) .pieza:nth-child(even) { --giro:  2.6deg; }
 
 @media (max-width: 860px) {
   .piezas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -884,7 +910,7 @@ button { font: inherit; color: inherit; }
     border-top: 1px solid var(--linea);
   }
   /* Sin movimiento: reja plana, sin desvios ni inclinaciones. */
-  .piezas { perspective: none; }
+  .columna { perspective: none; }
   .columna { transform: none !important; padding-bottom: 0 !important; }
   .pieza { transform: none !important; }
   .pieza__lamina { perspective: none; }
