@@ -215,30 +215,14 @@
             '<span class="ficha__rareza ' + est.clase + '"><b>' + nn(n) + '</b><span>' + est.texto + '</span></span>' +
           '</span>' +
         '</span>' +
-      '</button><!--corte-->';
+      '</button>';
     }).join('');
 
-    /* Reparto por turnos y no por trozos: asi las columnas quedan
-       con la misma cantidad —o una de diferencia— y el orden de
-       lectura sigue siendo de izquierda a derecha, fila por fila. */
-    var COLS = VELOCIDADES.length;
-    var cubos = [];
-    for (var c = 0; c < COLS; c++) cubos.push([]);
-    for (var k = 0; k < lista.length; k++) cubos[k % COLS].push(k);
-
-    var trozos = piezas.split('<!--corte-->');
-    $('piezas').innerHTML = cubos.map(function (indices, ci) {
-      /* Las columnas rapidas se quedan sin fotos antes; el relleno
-         de abajo evita que su ultima pieza se despegue del borde. */
-      var relleno = Math.max(0, (VELOCIDADES[ci] - 1) * INTENSIDAD * 900);
-      return '<div class="columna" style="padding-bottom:' + relleno.toFixed(0) + 'px">' +
-        indices.map(function (i) { return trozos[i]; }).join('') +
-        '</div>';
-    }).join('');
+    $('piezas').innerHTML = piezas;
 
     observarPiezas();
     armarCartas();
-    armarParalaje();
+    armarTira();
   }
 
   /* ---------------- La aparicion de cada pieza ----------------
@@ -485,106 +469,73 @@
     else mostrar();
   }
 
-  /* ---------------- La reja con paralaje ----------------
+  /* ---------------- La tira horizontal ----------------
 
-     Tres columnas, cada una a su propio ritmo, y cada foto
-     inclinada segun donde este en la pantalla: se asoma al subir
-     desde abajo, pasa plana por el centro y se aleja al salir por
-     arriba.
+     Los productos en una fila que se recorre de lado. El
+     desplazamiento es del navegador: overflow-x y scroll-snap, sin
+     una sola linea que mueva la barra por su cuenta. Despues de
+     tres intentos de motor propio, la leccion esta aprendida: lo
+     que el navegador ya sabe hacer, se le deja.
 
-     Dos decisiones que el efecto explica y conviene no deshacer:
+     Lo unico que se anade es arrastrar con el raton, porque una
+     rueda vertical no recorre una tira horizontal y la barra esta
+     oculta. Con dedo o con trackpad ya funcionaba solo.
 
-     El desplazamiento de columna es RELATIVO, medido desde que la
-     reja entra en pantalla. Con la posicion cruda del scroll las
-     columnas ya llegarian separadas.
+     El arrastre convive con el clic gracias a un umbral: por
+     debajo de seis pixeles es un clic y abre la ficha; por encima
+     es un arrastre y el clic se anula. Sin eso, cada vez que
+     alguien arrastrara se le abriria una pieza en la cara. */
 
-     La inclinacion se saca del centro de cada foto, asi que es
-     continua: no da un salto al cruzar ningun umbral.
+  var UMBRAL_ARRASTRE = 6;   // px antes de considerarlo arrastre
 
-     Las transformadas se escriben directas al elemento dentro de un
-     cuadro. Pasar veinte fotos por el estado de la pagina en cada
-     evento de scroll seria perder cuadros.
+  function armarTira() {
+    var tira = $('piezas');
+    if (!tira) return;
 
-     UNA COSA AÑADIDA, Y ES PARA QUE EL EFECTO OCURRA
+    var abajo = false, arrastrado = false;
+    var x0 = 0, izq0 = 0;
 
-     El fuente pone perspective en la reja y preserve-3d en cada
-     baldosa. Pero la perspectiva solo alcanza a los hijos directos
-     —las columnas—, y la columna lleva su propia transformada, que
-     aplana a los suyos. Sin preserve-3d en la columna, el rotateX
-     de las fotos no se ve como inclinacion sino como un
-     achatamiento vertical. Se le pone a la columna: es la linea
-     que hace verdad lo que el efecto dice que hace. */
+    tira.addEventListener('pointerdown', function (e) {
+      // Solo el raton: el dedo y el lapiz ya desplazan solos, y
+      // capturarlos aqui romperia el desplazamiento nativo.
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      abajo = true;
+      arrastrado = false;
+      x0 = e.clientX;
+      izq0 = tira.scrollLeft;
+    });
 
-  var VELOCIDADES = [1.2, 1.0, 1.4];   // la del medio es la referencia
-  var INCLINACION = 12;                 // grados en los bordes
-  var INTENSIDAD = 0.5;
-  var acotar = function (v, a, b) { return Math.min(Math.max(v, a), b); };
-
-  function armarParalaje() {
-    var reja = $('piezas');
-    if (!reja || quieto.matches) return;   // sin movimiento: reja normal
-
-    var columnas = [].slice.call(reja.querySelectorAll('.columna'));
-    var baldosas = [].slice.call(reja.querySelectorAll('.pieza'));
-    if (!columnas.length) return;
-
-    var pedido = false, aLaVista = true, cuadro = 0;
-
-    function medir() {
-      pedido = false;
-      var altoVista = window.innerHeight;
-      /* Una ventana sin alto es un estado real —pestania de fondo,
-         panel plegado, el cuadro anterior a la disposicion—.
-         Medir a traves de el seria dividir por cero y clavar todas
-         las fotos en la inclinacion maxima. Se espera; el
-         observador de tamanio nos trae de vuelta. */
-      if (altoVista <= 0) return;
-
-      var centroVista = altoVista / 2;
-
-      // Cuanto ha recorrido la reja desde que su borde de arriba
-      // toco el borde de abajo de la ventana.
-      var recorrido = altoVista - reja.getBoundingClientRect().top;
-
-      for (var i = 0; i < columnas.length; i++) {
-        var v = VELOCIDADES[i] === undefined ? 1 : VELOCIDADES[i];
-        var desvio = -recorrido * (v - 1) * INTENSIDAD;
-        columnas[i].style.transform = 'translate3d(0, ' + desvio.toFixed(2) + 'px, 0)';
+    tira.addEventListener('pointermove', function (e) {
+      if (!abajo) return;
+      var d = e.clientX - x0;
+      if (!arrastrado && Math.abs(d) < UMBRAL_ARRASTRE) return;
+      if (!arrastrado) {
+        arrastrado = true;
+        tira.setPointerCapture(e.pointerId);
+        tira.classList.add('arrastrando');
       }
+      tira.scrollLeft = izq0 - d;
+    });
 
-      for (var j = 0; j < baldosas.length; j++) {
-        var caja = baldosas[j].getBoundingClientRect();
-        var centro = caja.top + caja.height / 2;
-        // -1 arriba del todo, +1 abajo del todo.
-        var n = acotar((centro - centroVista) / (altoVista / 2), -1, 1);
-        // Por debajo del centro se asoma; por encima se aleja.
-        baldosas[j].style.transform = 'rotateX(' + (-n * INCLINACION).toFixed(2) + 'deg)';
+    function soltar(e) {
+      if (!abajo) return;
+      abajo = false;
+      tira.classList.remove('arrastrando');
+      if (e.pointerId !== undefined && tira.hasPointerCapture(e.pointerId)) {
+        tira.releasePointerCapture(e.pointerId);
       }
     }
+    tira.addEventListener('pointerup', soltar);
+    tira.addEventListener('pointercancel', soltar);
 
-    function pedir() {
-      if (pedido || !aLaVista) return;
-      pedido = true;
-      cuadro = requestAnimationFrame(medir);
-    }
-
-    /* Los eventos de scroll no burbujean, pero si bajan en la fase
-       de captura: un solo oyente en window recoge tanto el de la
-       pagina como el de cualquier contenedor que la reja tenga
-       encima. */
-    addEventListener('scroll', pedir, { passive: true, capture: true });
-    addEventListener('resize', pedir);
-
-    new IntersectionObserver(function (e) {
-      aLaVista = e[0].isIntersecting;
-      if (aLaVista) pedir();
-    }, { rootMargin: '20%' }).observe(reja);
-
-    // Las fotos que van llegando cambian el alto de las columnas, y
-    // con el todos los desvios.
-    new ResizeObserver(pedir).observe(reja);
-
-    medir();
+    /* El clic se anula en captura, antes de que llegue a la pieza:
+       asi no hay que tocar el manejador que abre la ficha. */
+    tira.addEventListener('click', function (e) {
+      if (!arrastrado) return;
+      e.preventDefault();
+      e.stopPropagation();
+      arrastrado = false;
+    }, true);
   }
 
   /* ---------------- El resorte ----------------

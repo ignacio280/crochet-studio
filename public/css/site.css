@@ -403,77 +403,49 @@ button { font: inherit; color: inherit; }
 }
 .manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
 /* ============================================================
-   LAS PIEZAS — reja de paralaje con cartas que se inclinan
+   LAS PIEZAS — una tira que se recorre de lado
 
-   Tres columnas, cada una a su propio ritmo. Cada foto se inclina
-   segun donde este en la pantalla —se asoma al subir, pasa plana
-   por el centro, se aleja al salir— y ademas sigue al puntero con
-   su propio basculado, que vuelve con resorte amortiguado.
+   Los productos en una fila. El desplazamiento lo hace el
+   navegador: overflow-x y scroll-snap, sin una sola linea que
+   mueva la barra por su cuenta.
 
-   Son dos efectos apilados, y cada uno escribe en un elemento
-   distinto a proposito:
+   Despues de tres motores propios que acabaron peleandose con el
+   scroll, la leccion esta aprendida: lo que el navegador ya sabe
+   hacer, se le deja. El enganche a cada pieza es scroll-snap
+   nativo y va en el compositor, asi que no puede trabarse.
 
-     .columna  el desvio del paralaje
-     .pieza    la inclinacion por posicion en pantalla
-     .carta    el basculado del puntero
+   Aqui el snap si puede ser mandatory sin miedo: manda solo dentro
+   de esta caja, no sobre la pagina. Lo que en su dia hubo que
+   descartar para el scroll vertical, que era de la pagina entera.
 
-   Si compartieran elemento se pisarian la transformada. Repartidos,
-   se componen: la columna arrastra, la baldosa se asoma y la carta
-   sigue al raton dentro de ella.
-
-   LA PERSPECTIVA VA EN LA COLUMNA, NO EN LA REJA
-
-   El fuente la pone en la reja. Pero la perspectiva solo alcanza a
-   los hijos directos —las columnas—, no a las baldosas, asi que la
-   inclinacion no se veria como tal sino como un achatamiento
-   vertical.
-
-   El primer arreglo fue ponerle preserve-3d a la columna para que
-   la perspectiva la atravesara. Funcionaba, y traia un fallo feo:
-   con preserve-3d la columna y sus baldosas comparten un mismo
-   espacio en tres dimensiones, y el navegador las ordena por
-   profundidad. La parte de la baldosa que se aleja del ojo —el
-   borde de abajo cuando la pieza esta por encima del centro—
-   quedaba DETRAS de la caja de su propia columna. Seguia
-   viendose, pero dejaba de recibir el puntero: el cuarto inferior
-   de cada foto no respondia al basculado.
-
-   Poniendo la perspectiva en la columna se arregla de raiz. Las
-   baldosas son hijas directas suyas, asi que la reciben; y la
-   columna deja de estar en el mismo espacio tridimensional que
-   ellas, asi que no hay nada que ordenar ni nada que se ponga
-   delante.
+   Cada carta sigue al puntero con su basculado, que es lo unico
+   que quedaba del efecto anterior y lo unico que se pidio guardar.
    ============================================================ */
 
 .piezas {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-  max-width: var(--ancho);
-  margin: 0 auto;
-  padding: var(--s8) var(--margen) var(--s10);
-}
-
-.columna {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-  perspective: 1200px;
-  will-change: transform;
+  gap: var(--s5);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  /* Un respiro a los lados para que la primera y la ultima pieza
+     no queden pegadas al borde de la ventana. */
+  padding: var(--s8) max(var(--margen), calc((100vw - var(--ancho)) / 2)) var(--s9);
+  /* Sin barra, como el resto del sitio. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* El dedo recorre la tira de lado y la pagina de arriba abajo. */
+  touch-action: pan-x pan-y;
+  cursor: grab;
 }
-
-@media (max-width: 860px) {
-  .piezas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 560px) {
-  .piezas { grid-template-columns: 1fr; }
-  /* En una columna el paralaje no separa nada: solo dejaria un
-     hueco al final. */
-  .columna { padding-bottom: 0 !important; transform: none !important; }
-}
+.piezas::-webkit-scrollbar { width: 0; height: 0; display: none; }
+.piezas.arrastrando { cursor: grabbing; scroll-snap-type: none; }
 
 .pieza {
   position: relative;
+  flex: 0 0 auto;
+  width: clamp(230px, 24vw, 320px);
+  scroll-snap-align: center;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: var(--s4);
@@ -484,14 +456,10 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
   color: inherit;
   text-align: left;
-  transform-style: preserve-3d;
-  will-change: transform;
 }
 
 /* La aparicion cuelga de una clase que pone el JS en el
-   contenedor. Sin ella las piezas estan puestas y visibles. Y solo
-   toca la opacidad: cualquier transformada aqui le quitaria a la
-   baldosa la suya, que es la del paralaje. */
+   contenedor. Sin ella las piezas estan puestas y visibles. */
 .piezas.observando .pieza {
   opacity: 0;
   transition: opacity 0.7s var(--suave);
@@ -535,6 +503,9 @@ button { font: inherit; color: inherit; }
   /* Virada al sepia en reposo, a color al acercarse. */
   filter: sepia(0.42) saturate(0.78) contrast(0.94) brightness(1.02);
   transition: filter 900ms var(--suave);
+  /* Arrastrar la tira no debe arrastrar la foto. */
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .pieza:hover .pieza__carta img,
 .pieza:focus-visible .pieza__carta img { filter: none; }
@@ -894,10 +865,8 @@ button { font: inherit; color: inherit; }
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  /* Sin movimiento: reja plana, sin desvios ni inclinaciones. */
-  .columna { perspective: none; }
-  .columna { transform: none !important; padding-bottom: 0 !important; }
-  .pieza { transform: none !important; }
+  /* Sin movimiento: la tira sin enganche ni basculado. */
+  .piezas { scroll-snap-type: none; }
   .pieza__lamina { perspective: none; }
   .pieza__carta img { filter: none !important; }
   .pieza__rotulo { display: none; }
