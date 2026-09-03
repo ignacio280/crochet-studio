@@ -216,276 +216,72 @@
       '</button>';
     }).join('');
 
-    $('piezas').innerHTML = '<div class="escenario">' + piezas + '</div>';
-    medirEscenario();
+    $('piezas').innerHTML = piezas;
+    observarPiezas();
   }
 
-  /* ---------------- El recorrido ----------------
+  /* ---------------- La aparicion de cada pieza ----------------
 
-     Un solo bucle. Traduce la posición del scroll a una posición
-     en la colección —un número decimal: 2.4 es "entre la tercera y
-     la cuarta"— y de ahí saca los dos números de cada pieza.
+     Un observador y un cambio de clase. Nada mas.
 
-     Ninguna pieza se desplaza en vertical. Por eso el scroll no se
-     siente como bajar. */
+     Antes esto era un motor: el contenedor tenia un alto calculado
+     por JavaScript, las piezas iban absolutas dentro de un
+     escenario pegado, y en cada cuadro se traducia la posicion del
+     scroll a una posicion decimal en la coleccion para escribir
+     dos numeros por pieza. Encima habia un snap propio que movia
+     la pagina por su cuenta.
 
-  var esc = { activo: false, inicio: 0, alto: 1, n: 0, nodos: [], actual: -1 };
+     Todo eso existia para que el recorrido no se sintiera como
+     bajar. Lo conseguia, pero al precio de pelearse con el scroll
+     del navegador en cada gesto, y eso se notaba mas que el efecto
+     que compraba.
 
-  // Cuánto scroll ocupa pasar de una pieza a la siguiente.
-  //
-  // Estaba en 0.9 pantallas. Con el salto ya resuelto por el snap,
-  // ese paso solo servia para que el gesto se sintiera pesado: se
-  // empujaba y casi no pasaba nada en pantalla. Mas corto, el
-  // movimiento responde de inmediato y el snap tiene menos camino
-  // que recorrer.
-  var PASO = 0.62;  // en pantallas
+     Ahora la pagina se desplaza sola, como cualquier pagina. El
+     navegador no tiene con quien pelear, asi que no hay tironeo
+     posible. Lo unico que hace el JavaScript es avisar cuando una
+     pieza entra en pantalla.
 
-  function medirEscenario() {
+     La clase va en el contenedor: si esto no corre, las piezas se
+     ven igual, quietas. Nada que lleve contenido depende de que
+     una animacion ocurra. */
+
+  function observarPiezas() {
     var cont = $('piezas');
-    esc.nodos = [].slice.call(cont.querySelectorAll('.pieza'));
-    esc.n = esc.nodos.length;
+    var nodos = [].slice.call(cont.querySelectorAll('.pieza'));
+    if (!nodos.length) return;
 
-    if (!esc.n || quieto.matches) {
-      cont.style.height = '';
-      esc.activo = false;
-      return;
+    if (quieto.matches || typeof IntersectionObserver !== 'function') {
+      return;   // se ven puestas, sin aparicion
     }
 
-    // Una pantalla para el escenario, más un paso por cada salto.
-    cont.style.height = (window.innerHeight * (1 + (esc.n - 1) * PASO)) + 'px';
+    cont.classList.add('observando');
 
-    var caja = cont.getBoundingClientRect();
-    esc.inicio = caja.top + window.pageYOffset;
-    esc.alto = Math.max(1, cont.offsetHeight - window.innerHeight);
-    esc.activo = true;
-    var a = (window.pageYOffset - esc.inicio) / esc.alto;
-    plantada = Math.round(Math.min(1, Math.max(0, a)) * (esc.n - 1));
-    recorrer();
-  }
+    /* Red de seguridad, y no es teorica.
 
-  /* ---------------- Acomodar ----------------
+       Esconder las piezas y confiar en que el observador las
+       destape es apostar a que el observador entrega. Si la pagina
+       carga en una pestania de fondo, o el navegador retrasa la
+       primera entrega, la coleccion se queda en blanco y no hay
+       nada que la saque de ahi.
 
-     Al soltar el scroll, la coleccion se planta en una pieza. Sin
-     esto se puede quedar descansando a mitad de camino: dos
-     laminas cruzadas a media opacidad, las dos desenfocadas y sin
-     texto, que es un estado de paso y no un sitio donde estar.
+       Asi que si en un segundo y medio no llego ninguna entrega,
+       se quita la clase y las piezas se ven puestas, sin
+       aparicion. Se pierde el efecto, no el contenido. */
+    var red = setTimeout(function () { cont.classList.remove('observando'); }, 1500);
 
-     Se hace al detenerse y no durante el scroll. Mientras la
-     persona sigue moviendose no se le toca nada: el temporizador
-     se reinicia con cada evento y solo dispara cuando la rueda o
-     el dedo se quedan quietos.
-
-     Fuera del rango del escenario no hace nada, asi que el resto
-     de la pagina se recorre libre. Por eso no se usa scroll-snap
-     de CSS: en mandatory se llevaria tambien el umbral, el
-     manifiesto y el pie, que no tienen donde plantarse. */
-
-  var ACOMODO = 90;     // ms de quietud antes de plantar
-  var UMBRAL = 0.06;    // parte de un paso que ya cuenta como intencion
-  var relojAcomodo = null;
-  var plantada = 0;     // la pieza donde se quedo la ultima vez
-  var veniaDeFuera = true;   // se entra al escenario, no se venia recorriendo
-
-  function posEnColeccion() {
-    var y = window.pageYOffset;
-    /* El limite se mide en pixeles y con un pixel de holgura.
-
-       Con avance > 1 a secas la ultima pieza se leia como "fuera
-       del escenario": el destino se redondea a pixel entero, asi
-       que al plantarse ahi el avance daba 1,0001. La siguiente
-       vez que se hacia scroll se tomaba por una entrada y se
-       redondeaba a la mas cercana, o sea de vuelta a la misma
-       pieza. Era exactamente el atasco, escondido en un decimal. */
-    var fuera = y < esc.inicio - 1 || y > esc.inicio + esc.alto + 1;
-    var avance = Math.min(1, Math.max(0, (y - esc.inicio) / esc.alto));
-    return { fuera: fuera, avance: avance, pos: avance * (esc.n - 1) };
-  }
-
-  function acomodar() {
-    if (!esc.activo || esc.n < 2) return;
-    if (document.body.classList.contains('sin-scroll')) return;   // ficha abierta
-
-    var m = posEnColeccion();
-    if (m.fuera) {
-      // Fuera del escenario no se acomoda nada, pero se anota por
-      // donde se salio para no volver perdido.
-      plantada = m.avance < 0.5 ? 0 : esc.n - 1;
-      veniaDeFuera = true;
-      return;
-    }
-
-    /* Entrando al escenario se redondea a la mas cercana.
-
-       Comprometer una direccion aca se saltaba una pieza: viniendo
-       del manifiesto, los primeros pixeles dentro ya contaban como
-       "avanzar uno" y la primera pieza no se llegaba a ver. Un
-       cambio de pieza se cuenta solo entre piezas. */
-    if (veniaDeFuera) {
-      veniaDeFuera = false;
-      plantada = Math.round(m.pos);
-      animarHasta(Math.round(esc.inicio + (plantada / (esc.n - 1)) * esc.alto));
-      return;
-    }
-
-    /* Se cuenta desde la pieza donde se estaba, no desde la mas
-       cercana.
-
-       Redondear a la mas cercana era lo que se sentia atascado: un
-       paso son 0,9 pantallas, asi que un gesto normal no llega ni a
-       la mitad y el acomodo devolvia a la misma pieza que ya se
-       estaba viendo. Habia que empujar media pantalla entera para
-       que el cambio contara.
-
-       Ahora cualquier movimiento con intencion —un 6% del paso, unos
-       40 px— compromete el cambio entero, y la animacion se
-       completa sola. Un gesto largo salta las piezas que abarque. */
-    var delta = m.pos - plantada;
-    var largo = delta < 0 ? -delta : delta;
-    var salto = largo < UMBRAL ? 0 : Math.max(1, Math.round(largo));
-    var destino = plantada + (delta < 0 ? -salto : salto);
-
-    if (destino < 0) destino = 0;
-    if (destino > esc.n - 1) destino = esc.n - 1;
-    plantada = destino;
-
-    var objetivo = Math.round(esc.inicio + (destino / (esc.n - 1)) * esc.alto);
-
-    /* Y aca esta lo que evita que se dispare solo.
-
-       El scroll que hacemos nosotros tambien lanza eventos, o sea
-       que este mismo acomodo se vuelve a pedir al terminar. Como el
-       viaje acaba justo en `plantada`, la segunda vuelta da delta 0
-       y se sale por aca. Sin ese punto fijo haria falta un candado
-       con temporizador, y un candado deja de escuchar a la persona
-       mientras dura. */
-    animarHasta(objetivo);
-  }
-
-  /* El snap se anima aca y no con behavior:'smooth'.
-
-     El deslizamiento del navegador dura lo que el navegador
-     decide, y para 600 px es largo y plano: se sentia como que la
-     pagina se arrastraba sola en vez de plantarse. Esto son 260 a
-     460 ms segun la distancia, con una salida cubica: arranca
-     rapido y frena al llegar, que es lo que se lee como snap.
-
-     Y se puede interrumpir. En cada cuadro se compara donde quedo
-     la pagina con donde la dejamos nosotros: si no coincide es que
-     la persona movio la rueda, y entonces manda ella. Un snap que
-     no se puede interrumpir es peor que no tener snap. */
-  var vuelo = 0;
-
-  function animarHasta(objetivo) {
-    if (vuelo) cancelAnimationFrame(vuelo);
-
-    var desde = window.pageYOffset;
-    var dist = objetivo - desde;
-    if (dist < 2 && dist > -2) { vuelo = 0; return; }
-
-    /* Si nadie esta mirando, se planta y ya.
-
-       requestAnimationFrame no corre en una pestania de fondo. Sin
-       esto el acomodo quedaria pendiente y se ejecutaria de golpe
-       al volver, con un salto en la cara. */
-    if (document.hidden) {
-      window.scrollTo({ top: objetivo, behavior: 'auto' });
-      vuelo = 0;
-      return;
-    }
-
-    var largo = dist < 0 ? -dist : dist;
-    var dur = Math.min(460, Math.max(260, largo * 0.6));
-    var t0 = performance.now();
-    var puesto = desde;
-
-    function paso(t) {
-      var y0 = window.pageYOffset;
-      if (y0 - puesto > 2 || puesto - y0 > 2) { vuelo = 0; return; }   // mando la persona
-
-      var k = (t - t0) / dur;
-      if (k > 1) k = 1;
-      var e = 1 - Math.pow(1 - k, 3);
-      var y = Math.round(desde + dist * e);
-
-      // behavior auto a la fuerza: la hoja de estilos pone
-      // scroll-behavior:smooth, y sin esto cada cuadro lanzaria su
-      // propio deslizamiento encima del anterior.
-      window.scrollTo({ top: y, behavior: 'auto' });
-      puesto = y;
-
-      vuelo = k < 1 ? requestAnimationFrame(paso) : 0;
-    }
-    vuelo = requestAnimationFrame(paso);
-  }
-
-  /* Se planta solo con la pagina de verdad quieta.
-
-     Antes bastaba con que no llegaran eventos durante 70 ms, y el
-     impulso de un trackpad tiene huecos mas largos que eso: el
-     snap arrancaba a media inercia, la persona seguia empujando,
-     el snap se cancelaba y volvia a arrancar. Ese forcejeo era
-     buena parte de lo que se sentia trabado.
-
-     Ahora ademas se compara la posicion: si cambio desde que se
-     puso el temporizador, todavia se esta moviendo y se vuelve a
-     esperar. */
-  function pedirAcomodo() {
-    clearTimeout(relojAcomodo);
-    var y0 = window.pageYOffset;
-    relojAcomodo = setTimeout(function () {
-      if (window.pageYOffset !== y0) { pedirAcomodo(); return; }
-      acomodar();
-    }, ACOMODO);
-  }
-
-  function recorrer() {
-    if (!esc.activo) return;
-
-    var avance = (window.pageYOffset - esc.inicio) / esc.alto;
-    avance = Math.min(1, Math.max(0, avance));
-
-    // Posición dentro de la colección: 0 es la primera centrada,
-    // n-1 la última.
-    var pos = avance * (esc.n - 1);
-    var cerca = Math.round(pos);
-
-    for (var i = 0; i < esc.n; i++) {
-      var t = pos - i;                 // <0 viene llegando, >0 ya pasó
-      var a = t < 0 ? -t : t;
-      var nodo = esc.nodos[i];
-
-      // Fuera del relevo no se pinta. Un elemento invisible se
-      // sigue componiendo, y acá cada lámina lleva un desenfoque:
-      // componer un blur que nadie ve es trabajo regalado en cada
-      // cuadro.
-      var fuera = a > 0.92;
-      if (nodo._fuera !== fuera) {
-        nodo.classList.toggle('fuera', fuera);
-        nodo._fuera = fuera;
+    var ojo = new IntersectionObserver(function (entradas) {
+      clearTimeout(red);
+      for (var i = 0; i < entradas.length; i++) {
+        if (!entradas[i].isIntersecting) continue;
+        // Una vez puesta, se queda. Que se vuelva a apagar al
+        // pasar de largo es movimiento que nadie pidio.
+        entradas[i].target.classList.add('dentro');
+        ojo.unobserve(entradas[i].target);
       }
-      if (fuera) {
-        if (nodo._t !== 9) { nodo.style.setProperty('--a', 1); nodo._t = 9; }
-        continue;
-      }
+    }, { threshold: 0.3 });
 
-      if (nodo._t !== undefined && Math.abs(nodo._t - t) < 0.002) continue;
-      nodo._t = t;
-      nodo.style.setProperty('--t', t.toFixed(4));
-      nodo.style.setProperty('--a', a.toFixed(4));
-    }
-
-    // Solo la pieza del centro recibe clics.
-    if (cerca !== esc.actual) {
-      if (esc.nodos[esc.actual]) esc.nodos[esc.actual].classList.remove('activa');
-      if (esc.nodos[cerca]) esc.nodos[cerca].classList.add('activa');
-      esc.actual = cerca;
-    }
+    for (var i = 0; i < nodos.length; i++) ojo.observe(nodos[i]);
   }
-
-  /* ---------------- Vigilancia del scroll ----------------
-
-     Un solo oyente para toda la página, y un cuadro por evento.
-     Ni el escenario ni la cabecera piden el suyo por separado. */
 
   /* ---------------- El peso del nombre ----------------
 
@@ -521,7 +317,6 @@
       pedido = false;
       var pegada = window.pageYOffset > 12;
       if (pegada !== pegadaAntes) { cab.classList.toggle('pegada', pegada); pegadaAntes = pegada; }
-      recorrer();
     }
 
     addEventListener('scroll', function () {
@@ -531,9 +326,9 @@
          con guarda de milesima: no hay nada que agrupar. Y asi el
          nombre tiene el peso correcto aunque el navegador este
          racaneando cuadros, que es justo cuando mas se notaria que
-         se quedo atras. Lo caro —el escenario— sigue en su cuadro. */
+         se quedo atras. Lo unico que queda en el cuadro es la
+         cabecera. */
       pesarMarca();
-      pedirAcomodo();
       if (pedido) return;
       pedido = true;
       requestAnimationFrame(marco);
@@ -544,12 +339,8 @@
     var reMedir;
     addEventListener('resize', function () {
       clearTimeout(reMedir);
-      reMedir = setTimeout(function () { medirUmbral(); medirEscenario(); }, 180);
+      reMedir = setTimeout(medirUmbral, 180);
     });
-
-    // Las fotos entran tarde y cambian el alto de la lámina: hay
-    // que volver a medir cuando terminan de cargar.
-    addEventListener('load', medirEscenario);
 
     marco();
   }
@@ -735,8 +526,6 @@
   function clonVolador(plato, caja) {
     var c = plato.cloneNode(true);
     c.classList.add('vuelo');
-    c.style.setProperty('--t', 0);   // sin el giro ni el desenfoque
-    c.style.setProperty('--a', 0);   // que traiga del escenario
     c.style.left = caja.left + 'px';
     c.style.top = caja.top + 'px';
     c.style.width = caja.width + 'px';
@@ -757,6 +546,20 @@
     var u = $('universo');
     var plato = laminaDe(pieza);
     var origen = plato.getBoundingClientRect();
+
+    /* Sin cuadros no hay vuelo que valga.
+
+       Las animaciones de la Web Animations API no corren en una
+       pagina que no se esta pintando. El vuelo empieza escondiendo
+       la ficha para revelarla al aterrizar: si el aterrizaje no
+       llega, queda una ficha abierta e invisible. Se abre puesta y
+       listo. */
+    if (document.hidden) {
+      u.classList.add('abierto');
+      document.body.classList.add('sin-scroll');
+      $('universoCerrar').focus();
+      return;
+    }
 
     // El destino no existe hasta que la ficha esta en la
     // disposicion, asi que se abre primero y se mide despues.
@@ -783,7 +586,7 @@
 
     // La ficha aparece con el plato todavia en el aire: al
     // aterrizar ya hay algo debajo y no se siente un corte.
-    u.animate([{ opacity: 0 }, { opacity: 1 }],
+    var fundido = u.animate([{ opacity: 0 }, { opacity: 1 }],
       { duration: 300, delay: DUR * 0.4, easing: 'linear', fill: 'both' });
 
     // La columna de texto entra escalonada, detras del plato.
@@ -799,10 +602,15 @@
       if (hecho) return;
       hecho = true;
       u.classList.remove('entrando');
+      // La animacion de opacidad lleva fill: sin cancelarla su
+      // ultimo cuadro sigue mandando y quitar la clase no sirve de
+      // nada. Asi la ficha se abriria invisible.
+      if (fundido) fundido.cancel();
       lamina.style.visibility = '';
-      // La lamina de verdad vuelve un cuadro antes de que el clon
-      // desaparezca: el relevo queda debajo del mismo pixel.
-      requestAnimationFrame(function () { clon.remove(); });
+      // La lamina de verdad vuelve un pelo antes de que el clon se
+      // vaya: el relevo queda debajo del mismo pixel. Con un
+      // temporizador y no con un cuadro, que puede no llegar.
+      setTimeout(function () { clon.remove(); }, 16);
       $('universoCerrar').focus();
     }
     setTimeout(aterrizar, DUR);
@@ -813,7 +621,7 @@
     var u = $('universo');
     var lamina = u.querySelector('.universo__lamina');
     var plato = laminaDe(pieza);
-    if (!lamina) { listo(); return; }
+    if (!lamina || document.hidden) { listo(); return; }
 
     var desde = lamina.getBoundingClientRect();
     var hacia = plato.getBoundingClientRect();
@@ -843,7 +651,7 @@
       // vaya, igual que al entrar: el relevo cae bajo el mismo pixel.
       pieza.classList.remove('volando');
       estado.piezaVolando = null;
-      requestAnimationFrame(function () { clon.remove(); listo(); });
+      setTimeout(function () { clon.remove(); listo(); }, 16);
     }
     setTimeout(fin, DUR);
     setTimeout(fin, 1000);

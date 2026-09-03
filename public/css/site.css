@@ -403,40 +403,33 @@ button { font: inherit; color: inherit; }
 }
 .manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
 /* ============================================================
-   EL ESCENARIO — una sola pantalla para toda la colección
+   LAS PIEZAS — una pantalla cada una
 
-   Antes cada pieza tenía su propia escena y, al terminar, se iba
-   hacia arriba. Ese desplazamiento vertical es justo lo que se
-   siente como "estoy bajando".
+   Una pieza por pantalla, en flujo normal. La pagina se desplaza
+   sola, como cualquier pagina.
 
-   Ahora hay un solo escenario fijo y las piezas no viajan: llegan
-   desde el fondo, ocupan el centro y siguen de largo hacia quien
-   mira. Nada se mueve en vertical, nunca. El scroll deja de leerse
-   como bajar y pasa a leerse como avanzar por una sala.
+   Antes esto era un escenario pegado con las piezas absolutas
+   dentro, y un motor en JavaScript que traducia el scroll a una
+   posicion decimal en la coleccion, cuadro a cuadro, mas un snap
+   propio que movia la pagina por su cuenta. Todo para que el
+   recorrido no se sintiera como bajar.
 
-   El JS escribe dos números por pieza:
-     --t  posición con signo. -1 viene llegando, 0 centrada, +1 ya
-          pasó de largo.
-     --a  la misma distancia sin signo, para lo que no distingue
-          lado (opacidad, desenfoque).
+   Lo conseguia, pero se pasaba el dia peleandose con el scroll del
+   navegador, y ese forcejeo se notaba mas que el efecto que
+   compraba. Se cambio el efecto por que funcione.
+
+   Lo que queda del estilo: una pieza por pantalla, el numeral
+   enorme detras, la ficha abajo, y una entrada lateral —la pieza
+   llega desde la izquierda— que ahora la resuelve una transicion
+   de CSS disparada por un observador, no un calculo por cuadro.
    ============================================================ */
 
 .piezas { position: relative; }
 
-.escenario {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  overflow: hidden;
-  /* Sin perspective. El escenario vuelve a ser plano: en 3D el
-     navegador rasteriza cada lamina como textura aparte y la
-     rehace al cambiar la profundidad, en cada cuadro y sobre
-     imagenes grandes. */
-}
-
 .pieza {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  min-height: 100svh;
+  width: 100%;
   display: grid;
   grid-template-rows: 1fr auto;
   align-items: center;
@@ -447,40 +440,30 @@ button { font: inherit; color: inherit; }
   cursor: pointer;
   color: inherit;
   text-align: left;
-  /* La caída es casi lineal a propósito: en el punto medio entre
-     dos piezas las dos están al 42%, así que el relevo se lee como
-     una disolvencia y no como un parpadeo con la pantalla vacía en
-     medio. Con una caída más brusca ese hueco aparecía. */
-  opacity: clamp(0, calc(1 - var(--a, 1) * 1.15), 1);
-  pointer-events: none;
-  will-change: opacity;
 }
-.pieza.activa { pointer-events: auto; }
 
-/* El relevo, simplificado.
+/* La entrada cuelga de una clase que pone el JS en el contenedor.
 
-   La idea es la misma: la pieza entra por la izquierda, se planta
-   en el centro y sigue de largo por la derecha, sin subir ni bajar
-   nunca. Lo que cambia es cuanto trabajo cuesta contarlo.
+   Sin esa clase las piezas estan puestas y visibles. Es la regla
+   de la casa: esconder la clase, nunca el estado por defecto. Una
+   pieza que necesita que corra un script para existir es una pieza
+   que a veces no existe. */
+.piezas.observando .pieza__lamina,
+.piezas.observando .pieza__ficha {
+  opacity: 0;
+  transition: opacity 0.75s var(--suave), transform 0.75s var(--entra);
+}
+.piezas.observando .pieza__lamina { transform: translate3d(-7vw, 0, 0) scale(0.96); }
+.piezas.observando .pieza__ficha  { transform: translate3d(-3vw, 0, 0); }
 
-   Antes eran cuatro cosas a la vez sobre cada lamina: traslacion,
-   profundidad en Z, giro en perspectiva y desenfoque, mas una
-   segunda transformada sobre la foto de dentro. Con dos laminas
-   cruzandose, eso son dos imagenes grandes que el navegador tiene
-   que volver a rasterizar en cada cuadro —el giro y la Z las
-   convierten en texturas 3D, y el blur obliga a recomponer todo el
-   recuadro—. De ahi el tironeo.
+.piezas.observando .pieza.dentro .pieza__lamina,
+.piezas.observando .pieza.dentro .pieza__ficha {
+  opacity: 1;
+  transform: none;
+}
+/* La ficha entra un poco despues que la foto. */
+.piezas.observando .pieza.dentro .pieza__ficha { transition-delay: 0.12s; }
 
-   Quedan dos, y las dos son gratis para el compositor:
-
-   1. DESPLAZAMIENTO LATERAL. Da la direccion: se lee como un flujo
-      y no como un parpadeo.
-   2. ESCALA. Llega un poco mas chica y se asienta al centro. Es lo
-      que hace que "llegue" en vez de solo pasar.
-
-   Se van: el desenfoque, el giro en perspectiva, el viaje en Z, la
-   rotacion variable por pieza y la paralaje de la foto dentro del
-   marco. Se ve mas sobrio, y se mueve. */
 .pieza__lamina {
   position: relative;
   display: block;
@@ -494,20 +477,11 @@ button { font: inherit; color: inherit; }
   overflow: hidden;
   background: var(--arena);
   border: 1px solid var(--linea);
-  transform:
-    translate3d(calc(var(--t, 0) * 26vw), 0, 0)
-    scale(calc(1 - var(--a, 0) * 0.09));
-  will-change: transform;
 }
-
 .pieza__lamina img { width: 100%; height: 100%; object-fit: cover; }
 
-/* Fuera de rango no se pinta: un elemento en opacity 0 se sigue
-   componiendo. */
-.pieza.fuera { visibility: hidden; }
-
-/* El numeral acompaña a su pieza y se desplaza de lado, no de
-   arriba abajo. */
+/* El numeral enorme, detras de su pieza. Quieto: ya no acompania
+   ningun recorrido. */
 .pieza__numeral {
   position: absolute;
   left: 50%; top: 50%;
@@ -521,28 +495,12 @@ button { font: inherit; color: inherit; }
   pointer-events: none; user-select: none;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  transform: translate3d(calc(-50% + var(--t, 0) * 18vw), -50%, 0);
+  transform: translate(-50%, -50%);
 }
 
-/* La ficha se queda quieta abajo. El texto no viaja: solo cambia
-   cuál es el que está. */
 .pieza__ficha {
   align-self: end;
   width: 100%;
-  /* Acompaña el flujo a un cuarto de la velocidad: se nota que va
-     con su pieza, pero el texto no sale volando. */
-  transform: translate3d(calc(var(--t, 0) * 8vw), 0, 0);
-  /* Y se apaga mucho antes que la lámina.
-
-     Dos imágenes pueden cruzarse a media opacidad y se lee como
-     una disolvencia. Dos textos a media opacidad, en el mismo
-     sitio, se leen como un borrón: en el cruce se veía "Bolso de
-     rafia" impreso encima de "Chaleco de lana gruesa".
-
-     Así el nombre se apaga antes de que llegue el siguiente. Queda
-     un instante sin texto mientras las piezas se cruzan, y eso es
-     correcto: la etiqueta aparece cuando la pieza se planta. */
-  opacity: clamp(0, calc(1.6 - var(--a, 0) * 4), 1);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -861,20 +819,16 @@ button { font: inherit; color: inherit; }
   .cursor { display: none !important; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
-  .piezas { height: auto !important; }
-  .escenario { position: static; height: auto; overflow: visible; perspective: none; }
+  /* Sin pantalla completa por pieza: una lista corrida, que es lo
+     que espera quien pide menos movimiento. La aparicion ni se
+     monta —el JS no pone .observando cuando esto esta activo—. */
   .pieza {
-    position: static; inset: auto;
-    opacity: 1 !important; pointer-events: auto;
+    min-height: 0;
     display: block;
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  .pieza__lamina { transform: none !important; filter: none !important; height: auto; width: min(88vw, 460px); }
-  .pieza__lamina img { transform: none !important; }
-  .pieza__ficha { transform: none !important; opacity: 1 !important; }
-  .pieza.fuera { visibility: visible; }
-  .pieza__lamina::after { display: none; }
+  .pieza__lamina { height: auto; width: min(88vw, 460px); }
   .pieza__numeral { display: none; }
   .pieza__ficha { margin-top: var(--s6); }
 }
