@@ -200,7 +200,7 @@
       }
 
       return '<button class="pieza" data-i="' + i + '" data-abrir="' + escapar(p.id) + '" ' +
-                     'aria-label="Ver ' + escapar(p.nombre) + '">' +
+                     'data-cursor="ver" aria-label="Ver ' + escapar(p.nombre) + '">' +
         '<span class="pieza__lamina">' +
           '<span class="pieza__carta">' + lamina(p, i < 3, i) + '</span>' +
         '</span>' +
