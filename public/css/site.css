@@ -428,7 +428,10 @@ button { font: inherit; color: inherit; }
   top: 0;
   height: 100svh;
   overflow: hidden;
-  perspective: 1600px;
+  /* Sin perspective. El escenario vuelve a ser plano: en 3D el
+     navegador rasteriza cada lamina como textura aparte y la
+     rehace al cambiar la profundidad, en cada cuadro y sobre
+     imagenes grandes. */
 }
 
 .pieza {
@@ -454,27 +457,30 @@ button { font: inherit; color: inherit; }
 }
 .pieza.activa { pointer-events: auto; }
 
-/* El relevo.
+/* El relevo, simplificado.
 
-   Un fundido de opacidad no es una transición: es la ausencia de
-   una. Acá la pieza hace un recorrido completo y legible —llega,
-   se planta, se va— y en ningún momento sube ni baja.
+   La idea es la misma: la pieza entra por la izquierda, se planta
+   en el centro y sigue de largo por la derecha, sin subir ni bajar
+   nunca. Lo que cambia es cuanto trabajo cuesta contarlo.
 
-   Cuatro cosas a la vez, todas colgadas del mismo --t:
+   Antes eran cuatro cosas a la vez sobre cada lamina: traslacion,
+   profundidad en Z, giro en perspectiva y desenfoque, mas una
+   segunda transformada sobre la foto de dentro. Con dos laminas
+   cruzandose, eso son dos imagenes grandes que el navegador tiene
+   que volver a rasterizar en cada cuadro —el giro y la Z las
+   convierten en texturas 3D, y el blur obliga a recomponer todo el
+   recuadro—. De ahi el tironeo.
 
-   1. DESPLAZAMIENTO LATERAL. Entra por la izquierda, sale por la
-      derecha. Da dirección: se siente un flujo, no un parpadeo.
-   2. PROFUNDIDAD. Llega de lejos y sale de cerca, pasando por
-      delante de quien mira.
-   3. GIRO EN PERSPECTIVA. Llega de canto y se endereza al centro.
-      Es lo que convierte el movimiento en algo con volumen.
-   4. ENFOQUE. Desenfocada de lejos, nítida en el centro. El
-      desenfoque va al cuadrado: nulo cerca del centro y fuerte en
-      los extremos, así el foco "cae" en la pieza en vez de subir
-      linealmente.
+   Quedan dos, y las dos son gratis para el compositor:
 
-   El giro cambia de signo y de magnitud según la posición en la
-   colección, para que dos relevos seguidos no sean el mismo. */
+   1. DESPLAZAMIENTO LATERAL. Da la direccion: se lee como un flujo
+      y no como un parpadeo.
+   2. ESCALA. Llega un poco mas chica y se asienta al centro. Es lo
+      que hace que "llegue" en vez de solo pasar.
+
+   Se van: el desenfoque, el giro en perspectiva, el viaje en Z, la
+   rotacion variable por pieza y la paralaje de la foto dentro del
+   marco. Se ve mas sobrio, y se mueve. */
 .pieza__lamina {
   position: relative;
   display: block;
@@ -488,31 +494,16 @@ button { font: inherit; color: inherit; }
   overflow: hidden;
   background: var(--arena);
   border: 1px solid var(--linea);
-  --giro: 4;
   transform:
-    translate3d(calc(var(--t, 0) * 32vw), 0, calc(var(--t, 0) * 420px))
-    rotateY(calc(var(--t, 0) * -24deg))
-    rotate(calc(var(--t, 0) * var(--giro) * 1deg));
-  filter: blur(calc(var(--a, 0) * var(--a, 0) * 13px));
-  will-change: transform, filter;
+    translate3d(calc(var(--t, 0) * 26vw), 0, 0)
+    scale(calc(1 - var(--a, 0) * 0.09));
+  will-change: transform;
 }
 
-/* Ni el mismo giro dos veces seguidas. */
-.pieza:nth-child(4n+2) .pieza__lamina { --giro: -6; }
-.pieza:nth-child(4n+3) .pieza__lamina { --giro: 7; }
-.pieza:nth-child(4n+4) .pieza__lamina { --giro: -3; }
+.pieza__lamina img { width: 100%; height: 100%; object-fit: cover; }
 
-/* La foto se mueve un poco dentro de su marco: paralaje interna.
-   Es lo que evita que la lámina se lea como una calcomanía plana
-   viajando por la pantalla. */
-.pieza__lamina img {
-  width: 100%; height: 100%; object-fit: cover;
-  transform: scale(calc(1 + var(--a, 0) * 0.14));
-}
-
-/* Fuera de rango no se pinta. Un elemento en opacity 0 se sigue
-   componiendo, y componer un desenfoque que nadie ve es regalar
-   trabajo a la GPU en cada cuadro. */
+/* Fuera de rango no se pinta: un elemento en opacity 0 se sigue
+   componiendo. */
 .pieza.fuera { visibility: hidden; }
 
 /* El numeral acompaña a su pieza y se desplaza de lado, no de

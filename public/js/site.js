@@ -280,7 +280,7 @@
      de CSS: en mandatory se llevaria tambien el umbral, el
      manifiesto y el pie, que no tienen donde plantarse. */
 
-  var ACOMODO = 70;     // ms de quietud antes de plantar
+  var ACOMODO = 90;     // ms de quietud antes de plantar
   var UMBRAL = 0.06;    // parte de un paso que ya cuenta como intencion
   var relojAcomodo = null;
   var plantada = 0;     // la pieza donde se quedo la ultima vez
@@ -418,9 +418,24 @@
     vuelo = requestAnimationFrame(paso);
   }
 
+  /* Se planta solo con la pagina de verdad quieta.
+
+     Antes bastaba con que no llegaran eventos durante 70 ms, y el
+     impulso de un trackpad tiene huecos mas largos que eso: el
+     snap arrancaba a media inercia, la persona seguia empujando,
+     el snap se cancelaba y volvia a arrancar. Ese forcejeo era
+     buena parte de lo que se sentia trabado.
+
+     Ahora ademas se compara la posicion: si cambio desde que se
+     puso el temporizador, todavia se esta moviendo y se vuelve a
+     esperar. */
   function pedirAcomodo() {
     clearTimeout(relojAcomodo);
-    relojAcomodo = setTimeout(acomodar, ACOMODO);
+    var y0 = window.pageYOffset;
+    relojAcomodo = setTimeout(function () {
+      if (window.pageYOffset !== y0) { pedirAcomodo(); return; }
+      acomodar();
+    }, ACOMODO);
   }
 
   function recorrer() {
