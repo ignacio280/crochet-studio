@@ -276,8 +276,8 @@ button { font: inherit; color: inherit; }
 /* ============================================================
    UMBRAL — la entrada
 
-   No es un hero con un banner: es el nudo, el nombre y la cuenta
-   real de la colección, y nada más.
+   No es un hero con un banner: el nombre y la cuenta real de la
+   colección, y nada más.
    ============================================================ */
 
 .umbral {
@@ -290,18 +290,6 @@ button { font: inherit; color: inherit; }
 }
 
 .umbral__centro { text-align: center; position: relative; z-index: 2; }
-
-.umbral__nudo {
-  width: clamp(64px, 8vw, 104px);
-  height: auto;
-  margin: 0 auto var(--s5);
-}
-.umbral__nudo path, .umbral__nudo circle {
-  fill: none;
-  stroke: var(--arcilla);
-  stroke-width: 1.4;
-  stroke-linecap: round;
-}
 
 .umbral__marca {
   font-family: var(--serif); font-weight: 300;
@@ -371,13 +359,11 @@ button { font: inherit; color: inherit; }
    depender de que una animación llegue a correr. */
 @media (prefers-reduced-motion: no-preference) {
   .anima .umbral__marca .letra { animation: entraLetra 0.7s var(--muelle) backwards; animation-delay: calc(var(--i) * 60ms + 0.1s); }
-  .anima .umbral__nudo   { animation: entraNudo 0.8s var(--entra) 0s backwards; }
   .anima .umbral__pie    { animation: sube 0.6s var(--suave) 0.3s backwards; }
   .anima .umbral__cuenta { animation: sube 0.6s var(--suave) 0.4s backwards; }
   .anima .umbral__baja   { animation: sube 0.6s var(--suave) 0.5s backwards; }
 }
 @keyframes entraLetra { from { opacity: 0; transform: translateY(0.4em) rotate(2deg); } to { opacity: 1; transform: none; } }
-@keyframes entraNudo  { from { opacity: 0; transform: scale(0.8) rotate(-12deg); } to { opacity: 1; transform: none; } }
 @keyframes sube       { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
 /* ============================================================
