@@ -232,7 +232,13 @@
   var esc = { activo: false, inicio: 0, alto: 1, n: 0, nodos: [], actual: -1 };
 
   // Cuánto scroll ocupa pasar de una pieza a la siguiente.
-  var PASO = 0.9;   // en pantallas
+  //
+  // Estaba en 0.9 pantallas. Con el salto ya resuelto por el snap,
+  // ese paso solo servia para que el gesto se sintiera pesado: se
+  // empujaba y casi no pasaba nada en pantalla. Mas corto, el
+  // movimiento responde de inmediato y el snap tiene menos camino
+  // que recorrer.
+  var PASO = 0.62;  // en pantallas
 
   function medirEscenario() {
     var cont = $('piezas');
@@ -274,7 +280,7 @@
      de CSS: en mandatory se llevaria tambien el umbral, el
      manifiesto y el pie, que no tienen donde plantarse. */
 
-  var ACOMODO = 140;    // ms de quietud antes de plantar
+  var ACOMODO = 70;     // ms de quietud antes de plantar
   var UMBRAL = 0.06;    // parte de un paso que ya cuenta como intencion
   var relojAcomodo = null;
   var plantada = 0;     // la pieza donde se quedo la ultima vez
@@ -317,10 +323,7 @@
     if (veniaDeFuera) {
       veniaDeFuera = false;
       plantada = Math.round(m.pos);
-      var yEntrada = Math.round(esc.inicio + (plantada / (esc.n - 1)) * esc.alto);
-      if (Math.abs(yEntrada - window.pageYOffset) >= 2) {
-        window.scrollTo({ top: yEntrada, behavior: quieto.matches ? 'auto' : 'smooth' });
-      }
+      animarHasta(Math.round(esc.inicio + (plantada / (esc.n - 1)) * esc.alto));
       return;
     }
 
@@ -355,9 +358,64 @@
        y se sale por aca. Sin ese punto fijo haria falta un candado
        con temporizador, y un candado deja de escuchar a la persona
        mientras dura. */
-    if (Math.abs(objetivo - window.pageYOffset) < 2) return;
+    animarHasta(objetivo);
+  }
 
-    window.scrollTo({ top: objetivo, behavior: quieto.matches ? 'auto' : 'smooth' });
+  /* El snap se anima aca y no con behavior:'smooth'.
+
+     El deslizamiento del navegador dura lo que el navegador
+     decide, y para 600 px es largo y plano: se sentia como que la
+     pagina se arrastraba sola en vez de plantarse. Esto son 260 a
+     460 ms segun la distancia, con una salida cubica: arranca
+     rapido y frena al llegar, que es lo que se lee como snap.
+
+     Y se puede interrumpir. En cada cuadro se compara donde quedo
+     la pagina con donde la dejamos nosotros: si no coincide es que
+     la persona movio la rueda, y entonces manda ella. Un snap que
+     no se puede interrumpir es peor que no tener snap. */
+  var vuelo = 0;
+
+  function animarHasta(objetivo) {
+    if (vuelo) cancelAnimationFrame(vuelo);
+
+    var desde = window.pageYOffset;
+    var dist = objetivo - desde;
+    if (dist < 2 && dist > -2) { vuelo = 0; return; }
+
+    /* Si nadie esta mirando, se planta y ya.
+
+       requestAnimationFrame no corre en una pestania de fondo. Sin
+       esto el acomodo quedaria pendiente y se ejecutaria de golpe
+       al volver, con un salto en la cara. */
+    if (document.hidden) {
+      window.scrollTo({ top: objetivo, behavior: 'auto' });
+      vuelo = 0;
+      return;
+    }
+
+    var largo = dist < 0 ? -dist : dist;
+    var dur = Math.min(460, Math.max(260, largo * 0.6));
+    var t0 = performance.now();
+    var puesto = desde;
+
+    function paso(t) {
+      var y0 = window.pageYOffset;
+      if (y0 - puesto > 2 || puesto - y0 > 2) { vuelo = 0; return; }   // mando la persona
+
+      var k = (t - t0) / dur;
+      if (k > 1) k = 1;
+      var e = 1 - Math.pow(1 - k, 3);
+      var y = Math.round(desde + dist * e);
+
+      // behavior auto a la fuerza: la hoja de estilos pone
+      // scroll-behavior:smooth, y sin esto cada cuadro lanzaria su
+      // propio deslizamiento encima del anterior.
+      window.scrollTo({ top: y, behavior: 'auto' });
+      puesto = y;
+
+      vuelo = k < 1 ? requestAnimationFrame(paso) : 0;
+    }
+    vuelo = requestAnimationFrame(paso);
   }
 
   function pedirAcomodo() {
