@@ -255,6 +255,47 @@
     recorrer();
   }
 
+  /* ---------------- Acomodar ----------------
+
+     Al soltar el scroll, la coleccion se planta en una pieza. Sin
+     esto se puede quedar descansando a mitad de camino: dos
+     laminas cruzadas a media opacidad, las dos desenfocadas y sin
+     texto, que es un estado de paso y no un sitio donde estar.
+
+     Se hace al detenerse y no durante el scroll. Mientras la
+     persona sigue moviendose no se le toca nada: el temporizador
+     se reinicia con cada evento y solo dispara cuando la rueda o
+     el dedo se quedan quietos.
+
+     Fuera del rango del escenario no hace nada, asi que el resto
+     de la pagina se recorre libre. Por eso no se usa scroll-snap
+     de CSS: en mandatory se llevaria tambien el umbral, el
+     manifiesto y el pie, que no tienen donde plantarse. */
+
+  var ACOMODO = 150;   // ms de quietud antes de plantar
+  var relojAcomodo = null;
+
+  function acomodar() {
+    if (!esc.activo || esc.n < 2) return;
+    if (document.body.classList.contains('sin-scroll')) return;   // ficha abierta
+
+    var avance = (window.pageYOffset - esc.inicio) / esc.alto;
+    if (avance < 0 || avance > 1) return;   // ya salio del escenario
+
+    var destino = Math.round(avance * (esc.n - 1));
+    var objetivo = Math.round(esc.inicio + (destino / (esc.n - 1)) * esc.alto);
+
+    // Ya esta plantada: no hay nada que mover.
+    if (Math.abs(objetivo - window.pageYOffset) < 2) return;
+
+    window.scrollTo({ top: objetivo, behavior: quieto.matches ? 'auto' : 'smooth' });
+  }
+
+  function pedirAcomodo() {
+    clearTimeout(relojAcomodo);
+    relojAcomodo = setTimeout(acomodar, ACOMODO);
+  }
+
   function recorrer() {
     if (!esc.activo) return;
 
@@ -317,6 +358,7 @@
     }
 
     addEventListener('scroll', function () {
+      pedirAcomodo();
       if (pedido) return;
       pedido = true;
       requestAnimationFrame(marco);
