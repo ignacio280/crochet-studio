@@ -231,10 +231,15 @@ body.portico-abierto .cabecera:not(.pegada) .indice a { color: var(--tinta-70); 
 body.portico-abierto .cabecera:not(.pegada) .indice a:hover { color: var(--noche); }
 body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(--noche); }
 
+/* Fondo opaco, sin desenfoque.
+
+   Un backdrop-filter obliga al navegador a releer y difuminar todo
+   lo que hay debajo en CADA cuadro. Con la pagina llena de capas
+   fijas y pegadas, eso se paga en scroll. Habia cuatro capas asi
+   —tres del degradado bajo la cabecera y esta— y se fueron las
+   cuatro. */
 .cabecera.pegada {
-  background: rgba(246, 239, 225, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--papel);
   border-bottom-color: var(--linea);
 }
 
@@ -283,48 +288,6 @@ body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(-
 }
 
 /* ============================================================
-   DESENFOQUE PROGRESIVO  (skill: progressive-blur)
-
-   La cabecera pegada corta el contenido contra un canto duro. Esto
-   lo disuelve: tres capas de desenfoque creciente, cada una con su
-   máscara, así lo que pasa por debajo se va perdiendo en vez de
-   desaparecer de golpe.
-
-   La skill propone ocho capas. Acá van tres: sobre una página con
-   cinco escenarios fijados, cada backdrop-filter obliga a releer lo
-   que hay detrás en cada cuadro, y ese coste ya me pasó factura una
-   vez. Tres alcanzan para que el degradado se lea.
-   ============================================================ */
-
-.desenfoque {
-  position: fixed;
-  inset: 0 0 auto 0;
-  height: 128px;
-  z-index: 55;              /* bajo la cabecera, sobre el contenido */
-  pointer-events: none;
-}
-.desenfoque > div { position: absolute; inset: 0; }
-
-.desenfoque > div:nth-child(1) {
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 40%, transparent 70%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 40%, transparent 70%);
-}
-.desenfoque > div:nth-child(2) {
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 20%, transparent 48%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 20%, transparent 48%);
-}
-.desenfoque > div:nth-child(3) {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 26%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 26%);
-}
-
-/* ============================================================
    PORTICO — la camara sale por la ventana
 
    El video no se reproduce: lo arrastra el scroll. La pagina
@@ -366,13 +329,13 @@ body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(-
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: url('/video/ventana-inicio.webp') center / cover no-repeat, var(--noche);
+  background: url('/video/ventana-inicio.webp?v=2') center / cover no-repeat, var(--noche);
 }
 /* Al llegar al final se cambia al fotograma fijo, que es de mas
    resolucion que el video: el cuadro se mira quieto un rato y ahi
    si se nota la nitidez. */
 .portico.revelado .portico__fondo {
-  background: url('/video/ventana-final.webp') center / cover no-repeat, var(--noche);
+  background: url('/video/ventana-final.webp?v=2') center / cover no-repeat, var(--noche);
 }
 .portico__video {
   width: 100%; height: 100%;
@@ -935,13 +898,12 @@ body.portico-cerrado .cabecera .marca { opacity: 0; pointer-events: none; }
   }
   .aparece { opacity: 1; transform: none; }
   .cursor { display: none !important; }
-  .desenfoque { display: none; }
   /* Sin viaje: el paisaje del final con el nombre puesto. No se
      pierde nada mas que el trayecto. */
   .portico { height: auto !important; }
   .portico__escenario { position: static; height: 100svh; }
   .portico__video { display: none; }
-  .portico__fondo { background: url('/video/ventana-final.webp') center / cover no-repeat, var(--noche); }
+  .portico__fondo { background: url('/video/ventana-final.webp?v=2') center / cover no-repeat, var(--noche); }
   .portico__centro, .portico__cuenta, .portico__baja { opacity: 1 !important; transform: none !important; }
   .portico.revelado .portico__marca .letra { animation: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
