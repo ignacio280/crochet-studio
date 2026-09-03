@@ -20,25 +20,37 @@
    ============================================================ */
 
 :root {
-  /* --- Color: los del taller --- */
-  --papel: #fffdff;
-  --hueso: #faf6ff;
-  --arena: #f2ebfd;
-  --linea: #e6ddf2;
-  --linea-fuerte: #d6c8ea;
+  /* --- Color: pigmentos de tierra, medidos del propio video ---
 
-  --tinta: #3b2c58;
-  --tinta-70: #6f5c92;
-  --tinta-45: #786a9c;
-  --noche: #2a1f42;
+     No son colores inventados para "parecer renacentista": salen
+     de muestrear los fotogramas del cuadro. De dia domina la umbra
+     y el bistre con reflejos crema; de noche, negro calido y un
+     azul pizarra en la ventana. Eso es, literalmente, una paleta
+     de taller del quinientos: pigmentos de tierra.
 
-  --arcilla: #7d54c4;
-  --arcilla-texto: #6a41b0;
+     La pagina queda en pergamino y no en oleo oscuro a proposito.
+     Se entra por la habitacion pintada —oscura, con vela— y desde
+     ahi se sale al taller con luz. La oscuridad es el umbral, no
+     el sitio. Ademas el texto largo y las fotos de producto piden
+     fondo claro. */
+  --papel: #f6efe1;        /* pergamino */
+  --hueso: #efe6d4;
+  --arena: #e4d8c1;        /* huecos de imagen */
+  --linea: #d9cbb0;
+  --linea-fuerte: #c2ae8c;
 
-  --menta: #bce6de;
-  --menta-texto: #3d7a6d;
-  --rosa: #f7c1dc;
-  --rosa-texto: #ad5b86;
+  --tinta: #2e1d0f;        /* umbra quemada */
+  --tinta-70: #5c4326;     /* bistre */
+  --tinta-45: #7a6242;     /* ocre oscuro */
+  --noche: #1a0d06;        /* la sombra mas profunda del cuadro */
+
+  --arcilla: #9a6b34;      /* oro viejo: el acento */
+  --arcilla-texto: #7d5526;/* el mismo, legible sobre pergamino */
+
+  --menta: #b9c0a0;
+  --menta-texto: #4d5a30;  /* oliva: disponible */
+  --rosa: #d8b7a4;
+  --rosa-texto: #8c3b39;   /* vino: agotada */
 
   --serif: 'Fraunces', 'Fraunces reserva', Georgia, serif;
   --sans: 'Quicksand', 'Quicksand reserva', -apple-system, 'Segoe UI', Arial, sans-serif;
@@ -179,16 +191,23 @@ button { font: inherit; color: inherit; }
    NAVEGACIÓN
    ============================================================ */
 
+/* Arriba del todo la cabecera flota sobre el portico, que es
+   oscuro: ahi va en claro. Al despegarse vuelve al pergamino. */
 .cabecera {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 60;
-  background: rgba(255, 253, 255, 0);
+  background: rgba(246, 239, 225, 0);
   border-bottom: 1px solid transparent;
   transition: background 0.4s var(--suave), border-color 0.4s var(--suave);
 }
+.cabecera:not(.pegada) .marca { color: #f4ead6; text-shadow: 0 1px 12px rgba(26,13,6,0.7); }
+.cabecera:not(.pegada) .indice a { color: #cbb894; text-shadow: 0 1px 12px rgba(26,13,6,0.7); }
+.cabecera:not(.pegada) .indice a:hover { color: #f4ead6; }
+.cabecera:not(.pegada) .menu-boton span { background: #f4ead6; }
+
 .cabecera.pegada {
-  background: rgba(255, 253, 255, 0.9);
+  background: rgba(246, 239, 225, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom-color: var(--linea);
@@ -281,110 +300,122 @@ button { font: inherit; color: inherit; }
 }
 
 /* ============================================================
-   UMBRAL — la entrada
+   PORTICO — la habitacion pintada
 
-   No es un hero con un banner: es el nudo, el nombre y la cuenta
-   real de la colección, y nada más.
+   El sitio ya no abre con una pantalla en blanco: abre dentro de
+   un cuadro. El video recorre el dia hasta la noche y vuelve, con
+   lo que el bucle cierra sin corte visible.
+
+   El velo no es decoracion. El video pasa de claro a oscuro, asi
+   que sin el, el nombre seria ilegible la mitad del bucle. Con el
+   velo el texto siempre va claro sobre oscuro, en los dos
+   extremos.
    ============================================================ */
 
-.umbral {
+.portico {
   position: relative;
   min-height: 100svh;
   display: grid;
   place-items: center;
   padding: calc(var(--nav) + var(--s8)) var(--margen) var(--s9);
   overflow: hidden;
+  background: var(--noche);
+  isolation: isolate;
 }
 
-.umbral__centro { text-align: center; position: relative; z-index: 2; }
-
-.umbral__nudo {
-  width: clamp(64px, 8vw, 104px);
-  height: auto;
-  margin: 0 auto var(--s5);
+.portico__fondo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  /* El cartel se ve antes que el video, y es lo unico que se ve si
+     el video no llega a correr. */
+  background: url('/video/taller.webp') center / cover no-repeat, var(--noche);
 }
-.umbral__nudo path, .umbral__nudo circle {
-  fill: none;
-  stroke: var(--arcilla);
-  stroke-width: 1.4;
-  stroke-linecap: round;
+.portico__video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.umbral__marca {
+.portico__velo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(62% 48% at 50% 46%, rgba(26,13,6,0.62), rgba(26,13,6,0.18) 70%, transparent),
+    linear-gradient(to bottom, rgba(26,13,6,0.42), transparent 26%, transparent 62%, rgba(26,13,6,0.72));
+}
+
+.portico__centro { text-align: center; position: relative; z-index: 1; }
+
+.portico__marca {
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(3.4rem, 13vw, 9rem);
   line-height: 0.9; letter-spacing: -0.04em;
-  color: var(--noche); margin: 0;
+  color: #f4ead6;
+  margin: 0;
+  text-shadow: 0 2px 24px rgba(26,13,6,0.55);
 }
-.umbral__marca .letra { display: inline-block; }
+.portico__marca .letra { display: inline-block; }
 
-.umbral__pie {
+.portico__pie {
   font-family: var(--mono); font-size: var(--t-micro);
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--tinta-45); margin: var(--s4) 0 0;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  color: #d6c3a0;
+  margin: var(--s4) 0 0;
+  text-shadow: 0 1px 12px rgba(26,13,6,0.7);
 }
 
-/* La cuenta de la colección, dicha como dato de archivo y no como
-   escasez fabricada: son las piezas que existen, nada más. */
-.umbral__cuenta {
+.portico__cuenta {
   position: absolute;
   left: var(--margen); bottom: var(--s8);
+  z-index: 1;
   font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--tinta-45);
+  color: #cbb894;
   display: grid; gap: var(--s1);
+  text-shadow: 0 1px 12px rgba(26,13,6,0.7);
 }
-.umbral__cuenta b {
+.portico__cuenta b {
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(2.4rem, 6vw, 4.5rem); line-height: 0.9;
-  color: var(--noche); font-variant-numeric: tabular-nums;
+  color: #f4ead6; font-variant-numeric: tabular-nums;
 }
 
-.umbral__baja {
+.portico__baja {
   position: absolute;
   right: var(--margen); bottom: var(--s8);
+  z-index: 1;
   font-family: var(--mono); font-size: 10px;
   letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--tinta-45);
+  color: #cbb894;
   display: inline-flex; flex-direction: column; align-items: center; gap: var(--s2);
+  text-shadow: 0 1px 12px rgba(26,13,6,0.7);
 }
-.umbral__baja::after {
+.portico__baja::after {
   content: ""; width: 1px; height: 26px;
-  background: var(--linea-fuerte);
+  background: rgba(244,234,214,0.55);
   animation: tira 2.6s var(--suave) infinite;
   transform-origin: top;
 }
 @keyframes tira {
-  0%, 100% { transform: scaleY(0.35); opacity: 0.45; }
+  0%, 100% { transform: scaleY(0.35); opacity: 0.4; }
   50%      { transform: scaleY(1); opacity: 1; }
 }
 
 @media (max-width: 620px) {
-  .umbral__cuenta, .umbral__baja { position: static; margin-top: var(--s7); }
-  .umbral__cuenta { justify-items: center; text-align: center; }
-  .umbral__baja { display: none; }
+  .portico__cuenta, .portico__baja { position: static; margin-top: var(--s7); }
+  .portico__cuenta { justify-items: center; text-align: center; }
+  .portico__baja { display: none; }
 }
 
-/* La entrada va colgada de .anima, y esa clase la pone el JS solo
-   si la página se está viendo de verdad.
-
-   Antes la portada arrancaba en opacity 0 y volvía a 1 al terminar
-   la animación. En una pestaña en segundo plano las animaciones no
-   arrancan nunca: la portada se quedaba en el primer fotograma, o
-   sea invisible, y el sitio se veía en blanco. Sin la clase no hay
-   animación y el contenido está simplemente ahí.
-
-   La regla, para no repetirlo: nada que lleve información puede
-   depender de que una animación llegue a correr. */
 @media (prefers-reduced-motion: no-preference) {
-  .anima .umbral__marca .letra { animation: entraLetra 0.7s var(--muelle) backwards; animation-delay: calc(var(--i) * 60ms + 0.1s); }
-  .anima .umbral__nudo   { animation: entraNudo 0.8s var(--entra) 0s backwards; }
-  .anima .umbral__pie    { animation: sube 0.6s var(--suave) 0.3s backwards; }
-  .anima .umbral__cuenta { animation: sube 0.6s var(--suave) 0.4s backwards; }
-  .anima .umbral__baja   { animation: sube 0.6s var(--suave) 0.5s backwards; }
+  .anima .portico__marca .letra { animation: entraLetra 0.7s var(--muelle) backwards; animation-delay: calc(var(--i) * 60ms + 0.1s); }
+  .anima .portico__pie    { animation: sube 0.6s var(--suave) 0.3s backwards; }
+  .anima .portico__cuenta { animation: sube 0.6s var(--suave) 0.4s backwards; }
+  .anima .portico__baja   { animation: sube 0.6s var(--suave) 0.5s backwards; }
 }
 @keyframes entraLetra { from { opacity: 0; transform: translateY(0.4em) rotate(2deg); } to { opacity: 1; transform: none; } }
-@keyframes entraNudo  { from { opacity: 0; transform: scale(0.8) rotate(-12deg); } to { opacity: 1; transform: none; } }
 @keyframes sube       { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
 /* ============================================================
@@ -836,6 +867,8 @@ button { font: inherit; color: inherit; }
   .aparece { opacity: 1; transform: none; }
   .cursor { display: none !important; }
   .desenfoque { display: none; }
+  /* Queda el cartel: el mismo cuadro, quieto. */
+  .portico__video { display: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
   .piezas { height: auto !important; }
