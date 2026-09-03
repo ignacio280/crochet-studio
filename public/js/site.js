@@ -388,12 +388,10 @@
       if (texto.textContent !== (rotulo || '')) texto.textContent = rotulo || '';
       cursor.classList.toggle('tiene-texto', !!rotulo);
 
-      // La lámina se inclina un poco hacia el puntero.
-      var plato = e.target.closest ? e.target.closest('.pieza__lamina') : null;
-      if (plato) {
-        var c = plato.getBoundingClientRect();
-        plato.style.setProperty('--mx', (((e.clientX - c.left) / c.width) - 0.5).toFixed(3));
-      }
+      /* Aqui se escribia --mx en cada movimiento, para el angulo de
+         un reflejo que ya no existe. Ademas leia getBoundingClientRect
+         en cada evento del raton, que fuerza al navegador a recalcular
+         la disposicion. Se va con el reflejo. */
     }, { passive: true });
 
     addEventListener('pointerdown', function () { cursor.classList.add('tiene-texto'); }, { passive: true });

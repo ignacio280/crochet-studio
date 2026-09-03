@@ -691,19 +691,21 @@ button { font: inherit; color: inherit; }
 }
 .rareza--no, .rareza--no b { color: var(--rosa-texto); }
 
-/* Reflejo que sigue al puntero. */
-@media (hover: hover) and (pointer: fine) {
-  .pieza__lamina::after {
-    content: "";
-    position: absolute; inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(
-      calc(var(--mx, 0) * 80deg + 110deg),
-      rgba(255, 255, 255, 0.3),
-      rgba(255, 255, 255, 0) 58%);
-  }
-}
+/* Aqui vivia un "reflejo que sigue al puntero": un pseudoelemento
+   en la figura, a inset 0 y z-index 2, con un degradado blanco en
+   diagonal encima de toda la caja de la foto.
+
+   Era de un diseno anterior y se quedo. Su angulo colgaba de --mx,
+   que ya no lo escribe nadie, asi que estaba clavado: un lavado
+   blanco fijo sobre cada foto. Y como va en la figura, que nunca
+   se transforma, se quedaba recto mientras la copia se inclinaba
+   —de ahi el rectangulo con esquinas rectas que se veia detras de
+   la foto girada—.
+
+   Se me escapo tres turnos seguidos porque para buscarlo recorria
+   los elementos con querySelectorAll, y eso no ve los
+   pseudoelementos. La proxima vez que algo pinte y no aparezca en
+   el arbol, mirar ::before y ::after. */
 
 .plato__falta {
   position: absolute; left: var(--s3); bottom: var(--s3);
