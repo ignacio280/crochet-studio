@@ -814,8 +814,6 @@
     }
     var rot = c.querySelector('.pieza__rotulo');
     if (rot) rot.parentNode.removeChild(rot);
-    var cinta = c.querySelector('.pieza__carta');
-    if (cinta) cinta.classList.add('sin-cinta');
     c.style.left = caja.left + 'px';
     c.style.top = caja.top + 'px';
     c.style.width = caja.width + 'px';
@@ -1095,11 +1093,6 @@
       estado.productos = data.productos || [];
       pintarTextos();
       pintarEscenas();
-      // La vitrina en arco vive en su propio modulo y necesita los
-      // mismos datos. Se los pasa este aviso, para no pedir la API
-      // dos veces.
-      window.SDB = { datos: estado };
-      document.dispatchEvent(new CustomEvent('sdb:datos', { detail: estado }));
       conectarEventos();
       vigilarScroll();
       observarAparicion();
