@@ -252,6 +252,8 @@
     esc.inicio = caja.top + window.pageYOffset;
     esc.alto = Math.max(1, cont.offsetHeight - window.innerHeight);
     esc.activo = true;
+    var a = (window.pageYOffset - esc.inicio) / esc.alto;
+    plantada = Math.round(Math.min(1, Math.max(0, a)) * (esc.n - 1));
     recorrer();
   }
 
@@ -272,20 +274,87 @@
      de CSS: en mandatory se llevaria tambien el umbral, el
      manifiesto y el pie, que no tienen donde plantarse. */
 
-  var ACOMODO = 150;   // ms de quietud antes de plantar
+  var ACOMODO = 140;    // ms de quietud antes de plantar
+  var UMBRAL = 0.06;    // parte de un paso que ya cuenta como intencion
   var relojAcomodo = null;
+  var plantada = 0;     // la pieza donde se quedo la ultima vez
+  var veniaDeFuera = true;   // se entra al escenario, no se venia recorriendo
+
+  function posEnColeccion() {
+    var y = window.pageYOffset;
+    /* El limite se mide en pixeles y con un pixel de holgura.
+
+       Con avance > 1 a secas la ultima pieza se leia como "fuera
+       del escenario": el destino se redondea a pixel entero, asi
+       que al plantarse ahi el avance daba 1,0001. La siguiente
+       vez que se hacia scroll se tomaba por una entrada y se
+       redondeaba a la mas cercana, o sea de vuelta a la misma
+       pieza. Era exactamente el atasco, escondido en un decimal. */
+    var fuera = y < esc.inicio - 1 || y > esc.inicio + esc.alto + 1;
+    var avance = Math.min(1, Math.max(0, (y - esc.inicio) / esc.alto));
+    return { fuera: fuera, avance: avance, pos: avance * (esc.n - 1) };
+  }
 
   function acomodar() {
     if (!esc.activo || esc.n < 2) return;
     if (document.body.classList.contains('sin-scroll')) return;   // ficha abierta
 
-    var avance = (window.pageYOffset - esc.inicio) / esc.alto;
-    if (avance < 0 || avance > 1) return;   // ya salio del escenario
+    var m = posEnColeccion();
+    if (m.fuera) {
+      // Fuera del escenario no se acomoda nada, pero se anota por
+      // donde se salio para no volver perdido.
+      plantada = m.avance < 0.5 ? 0 : esc.n - 1;
+      veniaDeFuera = true;
+      return;
+    }
 
-    var destino = Math.round(avance * (esc.n - 1));
+    /* Entrando al escenario se redondea a la mas cercana.
+
+       Comprometer una direccion aca se saltaba una pieza: viniendo
+       del manifiesto, los primeros pixeles dentro ya contaban como
+       "avanzar uno" y la primera pieza no se llegaba a ver. Un
+       cambio de pieza se cuenta solo entre piezas. */
+    if (veniaDeFuera) {
+      veniaDeFuera = false;
+      plantada = Math.round(m.pos);
+      var yEntrada = Math.round(esc.inicio + (plantada / (esc.n - 1)) * esc.alto);
+      if (Math.abs(yEntrada - window.pageYOffset) >= 2) {
+        window.scrollTo({ top: yEntrada, behavior: quieto.matches ? 'auto' : 'smooth' });
+      }
+      return;
+    }
+
+    /* Se cuenta desde la pieza donde se estaba, no desde la mas
+       cercana.
+
+       Redondear a la mas cercana era lo que se sentia atascado: un
+       paso son 0,9 pantallas, asi que un gesto normal no llega ni a
+       la mitad y el acomodo devolvia a la misma pieza que ya se
+       estaba viendo. Habia que empujar media pantalla entera para
+       que el cambio contara.
+
+       Ahora cualquier movimiento con intencion —un 6% del paso, unos
+       40 px— compromete el cambio entero, y la animacion se
+       completa sola. Un gesto largo salta las piezas que abarque. */
+    var delta = m.pos - plantada;
+    var largo = delta < 0 ? -delta : delta;
+    var salto = largo < UMBRAL ? 0 : Math.max(1, Math.round(largo));
+    var destino = plantada + (delta < 0 ? -salto : salto);
+
+    if (destino < 0) destino = 0;
+    if (destino > esc.n - 1) destino = esc.n - 1;
+    plantada = destino;
+
     var objetivo = Math.round(esc.inicio + (destino / (esc.n - 1)) * esc.alto);
 
-    // Ya esta plantada: no hay nada que mover.
+    /* Y aca esta lo que evita que se dispare solo.
+
+       El scroll que hacemos nosotros tambien lanza eventos, o sea
+       que este mismo acomodo se vuelve a pedir al terminar. Como el
+       viaje acaba justo en `plantada`, la segunda vuelta da delta 0
+       y se sale por aca. Sin ese punto fijo haria falta un candado
+       con temporizador, y un candado deja de escuchar a la persona
+       mientras dura. */
     if (Math.abs(objetivo - window.pageYOffset) < 2) return;
 
     window.scrollTo({ top: objetivo, behavior: quieto.matches ? 'auto' : 'smooth' });
