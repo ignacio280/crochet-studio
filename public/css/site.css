@@ -462,17 +462,6 @@ button { font: inherit; color: inherit; }
   will-change: transform;
 }
 
-/* El angulo de reposo de cada copia. Se reparte por columna y por
-   posicion dentro de ella: seis angulos distintos, siempre los
-   mismos al recargar. Un desorden que cambia solo no es desorden,
-   es ruido. */
-.columna:nth-child(1) .pieza:nth-child(odd)  { --giro: -2.4deg; }
-.columna:nth-child(1) .pieza:nth-child(even) { --giro:  1.9deg; }
-.columna:nth-child(2) .pieza:nth-child(odd)  { --giro:  1.3deg; }
-.columna:nth-child(2) .pieza:nth-child(even) { --giro: -3.1deg; }
-.columna:nth-child(3) .pieza:nth-child(odd)  { --giro: -1.1deg; }
-.columna:nth-child(3) .pieza:nth-child(even) { --giro:  2.6deg; }
-
 @media (max-width: 860px) {
   .piezas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -527,10 +516,6 @@ button { font: inherit; color: inherit; }
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  /* El giro de reposo. Con basculado el JS reescribe la
-     transformada entera y vuelve a poner este giro delante; esto
-     es lo que se ve sin puntero fino o con movimiento reducido. */
-  transform: rotate(var(--giro, 0deg));
 }
 
 .pieza__carta img {

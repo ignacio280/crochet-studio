@@ -652,14 +652,6 @@
     var rotulo = figura.querySelector('.pieza__rotulo');
     if (!carta) return;
 
-    /* Cada copia esta apoyada con su propio angulo. Al escribir la
-       transformada desde el JS se pisa la de la hoja de estilos,
-       asi que ese angulo se lee una vez y se vuelve a poner
-       delante de la inclinacion del puntero. Sin esto, basta pasar
-       el raton por encima para que la pieza se enderece sola y el
-       desorden se deshaga. */
-    var giroBase = parseFloat(getComputedStyle(carta).getPropertyValue('--giro')) || 0;
-
     var r = {
       giroX: new Resorte(0, TILT),
       giroY: new Resorte(0, TILT),
@@ -673,8 +665,7 @@
 
     function pintar() {
       carta.style.transform =
-        'rotate(' + giroBase + 'deg)' +
-        ' rotateX(' + r.giroX.valor + 'deg) rotateY(' + r.giroY.valor + 'deg)' +
+        'rotateX(' + r.giroX.valor + 'deg) rotateY(' + r.giroY.valor + 'deg)' +
         ' scale(' + r.escala.valor + ')';
       if (rotulo) {
         rotulo.style.opacity = Math.min(Math.max(r.opacidad.valor, 0), 1);
@@ -801,17 +792,10 @@
   function clonVolador(plato, caja) {
     var c = plato.cloneNode(true);
     c.classList.add('vuelo');
-    // La caja que se mide es la figura, que nunca se inclina: por
-    // eso el vuelo sigue siendo exacto aunque la copia este
-    // apoyada torcida. El clon arranca con el mismo angulo que
-    // tenia la copia y se endereza mientras viaja, asi que no hay
-    // salto al empezar.
+    // Sale plana: la caja que se mide es la figura, que nunca se
+    // transforma, asi que el vuelo encaja exacto.
     var carta = c.querySelector('.pieza__carta');
-    if (carta) {
-      var g = parseFloat(getComputedStyle(carta).getPropertyValue('--giro')) || 0;
-      carta.style.transform = 'rotate(' + g + 'deg)';
-      c.dataset.giro = g;
-    }
+    if (carta) carta.style.transform = 'none';
     var rot = c.querySelector('.pieza__rotulo');
     if (rot) rot.parentNode.removeChild(rot);
     c.style.left = caja.left + 'px';
@@ -889,16 +873,6 @@
     clon.animate(
       [{ transform: llevarA(destino, origen) }, { transform: 'none' }],
       { duration: DUR, easing: CURVA, fill: 'both' });
-
-    // La copia se endereza mientras viaja. Va en el elemento de
-    // dentro y no en el clon: asi gira sobre su propio centro sin
-    // estropear el encaje del vuelo, que usa la esquina.
-    var cartaClon = clon.querySelector('.pieza__carta');
-    if (cartaClon) {
-      cartaClon.animate(
-        [{ transform: 'rotate(' + (clon.dataset.giro || 0) + 'deg)' }, { transform: 'none' }],
-        { duration: DUR, easing: CURVA, fill: 'both' });
-    }
 
     // La ficha aparece con el plato todavia en el aire: al
     // aterrizar ya hay algo debajo y no se siente un corte.
