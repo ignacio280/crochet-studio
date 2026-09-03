@@ -329,13 +329,13 @@ body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(-
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: url('/video/ventana-inicio.webp?v=2') center / cover no-repeat, var(--noche);
+  background: url('/video/ventana-inicio.webp?v=3') center / cover no-repeat, var(--noche);
 }
 /* Al llegar al final se cambia al fotograma fijo, que es de mas
    resolucion que el video: el cuadro se mira quieto un rato y ahi
    si se nota la nitidez. */
 .portico.revelado .portico__fondo {
-  background: url('/video/ventana-final.webp?v=2') center / cover no-repeat, var(--noche);
+  background: url('/video/ventana-final.webp?v=3') center / cover no-repeat, var(--noche);
 }
 .portico__video {
   width: 100%; height: 100%;
@@ -436,10 +436,24 @@ body.portico-cerrado .portico__baja { opacity: 0; transform: translateY(14px); }
   .portico__baja { display: none; }
 }
 
-/* El nombre de la cabecera tampoco se adelanta al revelado. Misma
-   regla: esconde la clase, no el estado por defecto. */
-.cabecera .marca { transition: opacity 0.8s var(--suave); }
-body.portico-cerrado .cabecera .marca { opacity: 0; pointer-events: none; }
+/* La cabecera entera espera al revelado.
+
+   Durante el recorrido por la ventana no hay nada que navegar: la
+   pagina esta contando una sola cosa. El indice flotando encima
+   compite con el cuadro y ademas cae sobre zonas claras y oscuras
+   del video, donde no siempre se lee. Aparece cuando aparece el
+   nombre, y entonces ya hay un sitio donde ir.
+
+   Esconde la CLASE, no el estado por defecto: si el JavaScript no
+   corre, `portico-cerrado` nunca se pone y la cabecera se ve. Un
+   menu que depende de un script para existir es un menu que a veces
+   no existe. */
+.cabecera { transition: opacity 0.9s var(--suave), background 0.4s var(--suave), border-color 0.4s var(--suave); }
+body.portico-cerrado .cabecera {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;  /* fuera tambien del tabulador y del lector */
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .portico.revelado .portico__marca .letra {
@@ -903,7 +917,7 @@ body.portico-cerrado .cabecera .marca { opacity: 0; pointer-events: none; }
   .portico { height: auto !important; }
   .portico__escenario { position: static; height: 100svh; }
   .portico__video { display: none; }
-  .portico__fondo { background: url('/video/ventana-final.webp?v=2') center / cover no-repeat, var(--noche); }
+  .portico__fondo { background: url('/video/ventana-final.webp?v=3') center / cover no-repeat, var(--noche); }
   .portico__centro, .portico__cuenta, .portico__baja { opacity: 1 !important; transform: none !important; }
   .portico.revelado .portico__marca .letra { animation: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
