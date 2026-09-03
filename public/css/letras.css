@@ -12,8 +12,8 @@
    gordas antes de asentarse.
 
    Ahora salen del mismo servidor, precargadas en la primera vuelta.
-   122 KB las cuatro, subconjunto latino —cubre acentos y ñ, que es
-   lo que este sitio escribe—.
+   Subconjunto latino —cubre acentos y ñ, que es lo que este sitio
+   escribe—.
 
    font-display: optional es la parte que mata el salto. El
    navegador espera un instante: si la fuente llegó, la usa desde el
@@ -34,10 +34,17 @@
   font-display: optional;
 }
 @font-face {
-  font-family: 'Quicksand';
-  src: url('/fonts/quicksand-var.woff2') format('woff2');
+  font-family: 'EB Garamond';
+  src: url('/fonts/garamond-var.woff2') format('woff2');
   font-weight: 400 700;
   font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('/fonts/garamond-italic-var.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: italic;
   font-display: optional;
 }
 @font-face {
@@ -66,11 +73,11 @@
   line-gap-override: 0%;
 }
 @font-face {
-  font-family: 'Quicksand reserva';
-  src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
-  size-adjust: 101.1%;
-  ascent-override: 98.9%;
-  descent-override: 24.7%;
+  font-family: 'Garamond reserva';
+  src: local('Georgia'), local('Times New Roman'), local('Times');
+  size-adjust: 89.4%;
+  ascent-override: 112.7%;
+  descent-override: 33.3%;
   line-gap-override: 0%;
 }
 @font-face {

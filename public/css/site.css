@@ -52,14 +52,22 @@
   --rosa: #d8b7a4;
   --rosa-texto: #8c3b39;   /* vino: agotada */
 
-  --serif: 'Fraunces', 'Fraunces reserva', Georgia, serif;
-  --sans: 'Quicksand', 'Quicksand reserva', -apple-system, 'Segoe UI', Arial, sans-serif;
-  --mono: 'IBM Plex Mono', 'Mono reserva', ui-monospace, Menlo, monospace;
+  /* Tres oficios. Los nombres dicen el oficio, no la forma: el
+     texto ya no es una sans. */
+  --serif: 'Fraunces', 'Fraunces reserva', Georgia, serif;   /* titula */
+  --texto: 'EB Garamond', 'Garamond reserva', Georgia, serif; /* narra */
+  --mono: 'IBM Plex Mono', 'Mono reserva', ui-monospace, Menlo, monospace; /* dato */
 
+  /* La escala sube porque la letra cambio de esqueleto. EB Garamond
+     tiene la altura de x en 0,400 del em; Quicksand la tenia en
+     0,503. Al mismo tamano nominal se ve un 20% mas chica, asi que
+     conservar 16px habria dejado el texto diminuto. 19px devuelve
+     la misma altura aparente. Las etiquetas mono no se tocan: la
+     mono no cambio. */
   --t-micro: 11px;
-  --t-menor: 0.8125rem;
-  --t-base: 1rem;
-  --t-mayor: 1.1875rem;
+  --t-menor: 0.95rem;
+  --t-base: 1.1875rem;
+  --t-mayor: 1.375rem;
   --t-h2: clamp(1.6rem, 3vw, 2.4rem);
 
   --s1: 4px;  --s2: 8px;   --s3: 12px;  --s4: 16px;  --s5: 24px;
@@ -86,9 +94,9 @@ body {
   margin: 0;
   background: var(--papel);
   color: var(--tinta);
-  font-family: var(--sans);
+  font-family: var(--texto);
   font-size: var(--t-base);
-  line-height: 1.6;
+  line-height: 1.62;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -790,13 +798,13 @@ button { font: inherit; color: inherit; }
 }
 @media (max-width: 760px) { .pie__grid { grid-template-columns: 1fr; gap: var(--s6); } }
 .pie__marca { font-family: var(--serif); font-weight: 300; font-size: 1.75rem; color: var(--noche); margin-bottom: var(--s2); }
-.cierre p { color: var(--tinta-70); font-size: 0.9375rem; }
+.cierre p { color: var(--tinta-70); font-size: 1.05rem; }
 .cierre h4 {
   font-family: var(--mono); font-size: var(--t-micro); font-weight: 400;
   letter-spacing: 0.13em; text-transform: uppercase; color: var(--tinta-45); margin: 0 0 var(--s3);
 }
 .pie__lista { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
-.pie__lista a { font-size: 0.9375rem; color: var(--tinta-70); transition: color 0.25s var(--suave); }
+.pie__lista a { font-size: 1.05rem; color: var(--tinta-70); transition: color 0.25s var(--suave); }
 .pie__lista a:hover { color: var(--arcilla-texto); }
 .pie__abajo {
   border-top: 1px solid var(--linea); padding-top: var(--s5);

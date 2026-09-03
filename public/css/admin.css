@@ -19,7 +19,13 @@
   --rojo: #b3456a;
 
   --serif: 'Fraunces', 'Fraunces reserva', Georgia, serif;
-  --sans: 'Quicksand', 'Quicksand reserva', -apple-system, 'Segoe UI', Arial, sans-serif;
+  /* El panel NO sigue la direccion de arte de la tienda, y es a
+     proposito. Es una herramienta de trabajo: formularios, campos,
+     listas. Una garalda a 15px en un formulario se lee peor que una
+     sans del sistema, y ademas obligaria a que la duenia baje una
+     fuente para editar precios. Fraunces se queda solo en los
+     titulos, para que el panel siga sintiendose parte del taller. */
+  --texto: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Arial, sans-serif;
 
   --radio: 16px;
   --pastilla: 999px;
@@ -33,7 +39,7 @@ body {
   margin: 0;
   background: var(--hueso);
   color: var(--tinta);
-  font-family: var(--sans);
+  font-family: var(--texto);
   font-size: 15px;
   font-weight: 500;
   line-height: 1.6;
@@ -83,7 +89,7 @@ a { color: var(--arcilla); }
 
 .barra__titulo small {
   display: block;
-  font-family: var(--sans);
+  font-family: var(--texto);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -98,7 +104,7 @@ a { color: var(--arcilla); }
   background: transparent;
   border-radius: var(--pastilla);
   padding: 9px 20px;
-  font-family: var(--sans);
+  font-family: var(--texto);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -143,7 +149,7 @@ select {
   border: 1px solid var(--linea);
   border-radius: 10px;
   background: var(--hueso);
-  font-family: var(--sans);
+  font-family: var(--texto);
   font-size: 15px;
   font-weight: 500;
   color: var(--tinta);
@@ -172,7 +178,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--arcilla); outlin
   border-radius: var(--pastilla);
   background: transparent;
   color: var(--tinta);
-  font-family: var(--sans);
+  font-family: var(--texto);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
