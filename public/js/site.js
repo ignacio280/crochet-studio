@@ -200,9 +200,11 @@
       }
 
       return '<button class="pieza" data-i="' + i + '" data-abrir="' + escapar(p.id) + '" ' +
-                     'data-cursor="ver" aria-label="Ver ' + escapar(p.nombre) + '">' +
-        '<span class="pieza__numeral" aria-hidden="true">' + nn(n) + '</span>' +
-        '<span class="pieza__lamina">' + lamina(p, i === 0, i) + '</span>' +
+                     'aria-label="Ver ' + escapar(p.nombre) + '">' +
+        '<span class="pieza__lamina">' +
+          '<span class="pieza__carta">' + lamina(p, i < 3, i) + '</span>' +
+          '<span class="pieza__rotulo">' + escapar(p.nombre) + '</span>' +
+        '</span>' +
         '<span class="pieza__ficha">' +
           '<span>' +
             '<span class="ficha__id">Pieza ' + nn(n) + ' / ' + nn(total) + ' · ' + escapar(p.categoria || 'Sin categoría') + '</span>' +
@@ -218,6 +220,7 @@
 
     $('piezas').innerHTML = piezas;
     observarPiezas();
+    armarCartas();
   }
 
   /* ---------------- La aparicion de cada pieza ----------------
@@ -464,6 +467,148 @@
     else mostrar();
   }
 
+  /* ---------------- El resorte ----------------
+
+     Solucionador de resortes minimo, portado del que venia con el
+     efecto. Mismo vocabulario que las librerias de movimiento
+     —rigidez, amortiguacion, masa—, mismo integrador de Euler
+     semi-implicito y mismos umbrales de reposo, para que los
+     valores sigan siendo los mismos si algun dia se cambia por una
+     libreria de verdad.
+
+     El original es TypeScript sobre React con Tailwind. Aca no hay
+     ninguna de las tres cosas —y la politica de seguridad del
+     sitio no deja cargar scripts de fuera—, asi que lo que se
+     conserva es el comportamiento: las mismas constantes, la misma
+     matematica y los mismos guardas. */
+
+  var REPOSO_POS = 0.001;
+  var REPOSO_VEL = 0.01;
+
+  function Resorte(inicial, cfg) {
+    this.valor = inicial;
+    this.destino = inicial;
+    this.velocidad = 0;
+    this.cfg = cfg;
+  }
+  Resorte.prototype.set = function (destino) { this.destino = destino; };
+  // Avanza dt segundos. Devuelve true mientras siga moviendose.
+  Resorte.prototype.paso = function (dt) {
+    var d = this.valor - this.destino;
+    if (Math.abs(d) < REPOSO_POS && Math.abs(this.velocidad) < REPOSO_VEL) {
+      this.valor = this.destino;
+      this.velocidad = 0;
+      return false;
+    }
+    var a = (-this.cfg.rigidez * d - this.cfg.amort * this.velocidad) / this.cfg.masa;
+    this.velocidad += a * dt;
+    this.valor += this.velocidad * dt;
+    return true;
+  };
+
+  /* ---------------- El basculado de las cartas ----------------
+
+     La carta se inclina siguiendo al puntero, vuelve con resorte
+     amortiguado, y el rotulo bascula segun la velocidad vertical
+     del cursor.
+
+     Solo donde hay puntero fino, y nunca con movimiento reducido
+     activo: es una prestacion del raton y es movimiento que
+     alguien puede no querer. Un solo guarda, como manda el efecto.
+
+     El bucle corre unicamente mientras los resortes se asientan y
+     se apaga solo. Por eso montar las cinco cartas no cuesta nada
+     en reposo. */
+
+  var TILT   = { rigidez: 100, amort: 30, masa: 2 };
+  var FUNDE  = { rigidez: 200, amort: 30, masa: 1 };
+  var ROTULO = { rigidez: 350, amort: 30, masa: 1 };
+  var VAIVEN = 0.6;      // cuanto bascula el rotulo con la velocidad
+  var AMPLITUD = 12;     // grados maximos de inclinacion
+  var ESCALA_HOVER = 1.06;
+
+  function armarBasculado(figura) {
+    var carta = figura.querySelector('.pieza__carta');
+    var rotulo = figura.querySelector('.pieza__rotulo');
+    if (!carta) return;
+
+    var r = {
+      giroX: new Resorte(0, TILT),
+      giroY: new Resorte(0, TILT),
+      escala: new Resorte(1, TILT),
+      opacidad: new Resorte(0, FUNDE),
+      giroRotulo: new Resorte(0, ROTULO)
+    };
+    var llaves = ['giroX', 'giroY', 'escala', 'opacidad', 'giroRotulo'];
+    var puntero = { x: 0, y: 0, ultimoY: 0 };
+    var cuadro = null, tPrevio = 0;
+
+    function pintar() {
+      carta.style.transform =
+        'rotateX(' + r.giroX.valor + 'deg) rotateY(' + r.giroY.valor + 'deg) scale(' + r.escala.valor + ')';
+      if (rotulo) {
+        rotulo.style.opacity = Math.min(Math.max(r.opacidad.valor, 0), 1);
+        rotulo.style.transform =
+          'translate(' + puntero.x + 'px, ' + puntero.y + 'px) rotate(' + r.giroRotulo.valor + 'deg)';
+      }
+    }
+
+    function marcha(t) {
+      // Se acota dt: si la pestania estuvo de fondo, un salto
+      // grande lanzaria los resortes a orbita.
+      var dt = Math.min((t - tPrevio) / 1000, 1 / 30);
+      tPrevio = t;
+      var vivo = false;
+      for (var i = 0; i < llaves.length; i++) {
+        if (r[llaves[i]].paso(dt)) vivo = true;
+      }
+      pintar();
+      cuadro = vivo ? requestAnimationFrame(marcha) : null;
+    }
+
+    function arrancar() {
+      if (cuadro !== null) return;
+      tPrevio = performance.now();
+      cuadro = requestAnimationFrame(marcha);
+    }
+
+    figura.addEventListener('mousemove', function (e) {
+      var caja = figura.getBoundingClientRect();
+      var dx = e.clientX - caja.left - caja.width / 2;
+      var dy = e.clientY - caja.top - caja.height / 2;
+
+      r.giroX.set((dy / (caja.height / 2)) * -AMPLITUD);
+      r.giroY.set((dx / (caja.width / 2)) * AMPLITUD);
+      r.giroRotulo.set(-(dy - puntero.ultimoY) * VAIVEN);
+
+      puntero.x = e.clientX - caja.left;
+      puntero.y = e.clientY - caja.top;
+      puntero.ultimoY = dy;
+      arrancar();
+    });
+
+    figura.addEventListener('mouseenter', function () {
+      r.escala.set(ESCALA_HOVER);
+      r.opacidad.set(1);
+      arrancar();
+    });
+
+    figura.addEventListener('mouseleave', function () {
+      r.escala.set(1);
+      r.opacidad.set(0);
+      r.giroX.set(0);
+      r.giroY.set(0);
+      r.giroRotulo.set(0);
+      arrancar();
+    });
+  }
+
+  function armarCartas() {
+    if (!finoYconHover.matches || quieto.matches) return;
+    var figuras = document.querySelectorAll('.pieza__lamina');
+    for (var i = 0; i < figuras.length; i++) armarBasculado(figuras[i]);
+  }
+
   /* ---------------- El vuelo de la lamina ----------------
 
      El plato que se toco viaja hasta su lugar dentro de la ficha.
@@ -499,7 +644,7 @@
   // cuadro: una transicion permanente dejaria el relevo entre
   // piezas arrastrandose 300 ms por detras.
   function apagarOrigen(pieza) {
-    var partes = pieza.querySelectorAll('.pieza__ficha, .pieza__numeral');
+    var partes = pieza.querySelectorAll('.pieza__ficha');
     var guardadas = [];
     for (var i = 0; i < partes.length; i++) {
       var el = partes[i];
@@ -526,6 +671,12 @@
   function clonVolador(plato, caja) {
     var c = plato.cloneNode(true);
     c.classList.add('vuelo');
+    // Sale plano y sin rotulo: la caja que se mide es la figura,
+    // que nunca se inclina, asi que el vuelo sigue siendo exacto.
+    var carta = c.querySelector('.pieza__carta');
+    if (carta) carta.style.transform = 'none';
+    var rot = c.querySelector('.pieza__rotulo');
+    if (rot) rot.parentNode.removeChild(rot);
     c.style.left = caja.left + 'px';
     c.style.top = caja.top + 'px';
     c.style.width = caja.width + 'px';

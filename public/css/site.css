@@ -403,38 +403,39 @@ button { font: inherit; color: inherit; }
 }
 .manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
 /* ============================================================
-   LAS PIEZAS — una pantalla cada una
+   LAS PIEZAS — galeria de cartas que se inclinan
 
-   Una pieza por pantalla, en flujo normal. La pagina se desplaza
-   sola, como cualquier pagina.
+   Todas juntas en una reja, cerca unas de otras. Se acabo la
+   pantalla por pieza: la coleccion se ve de una mirada, que para
+   cinco objetos es lo honesto.
 
-   Antes esto era un escenario pegado con las piezas absolutas
-   dentro, y un motor en JavaScript que traducia el scroll a una
-   posicion decimal en la coleccion, cuadro a cuadro, mas un snap
-   propio que movia la pagina por su cuenta. Todo para que el
-   recorrido no se sintiera como bajar.
-
-   Lo conseguia, pero se pasaba el dia peleandose con el scroll del
-   navegador, y ese forcejeo se notaba mas que el efecto que
-   compraba. Se cambio el efecto por que funcione.
-
-   Lo que queda del estilo: una pieza por pantalla, el numeral
-   enorme detras, la ficha abajo, y una entrada lateral —la pieza
-   llega desde la izquierda— que ahora la resuelve una transicion
-   de CSS disparada por un observador, no un calculo por cuadro.
+   Cada carta sigue al puntero con una inclinacion en perspectiva y
+   vuelve con resorte amortiguado; el rotulo bascula segun la
+   velocidad vertical del cursor. El efecto viene escrito para
+   React con Tailwind, que este sitio no usa —ni puede cargar, por
+   la politica de seguridad—, asi que las clases de valor arbitrario
+   estan portadas a CSS de verdad: la perspectiva en la figura, el
+   preserve-3d en la carta y los 30px hacia delante del rotulo.
+   Sin eso la inclinacion se veria plana.
    ============================================================ */
 
-.piezas { position: relative; }
+.piezas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s6) var(--s5);
+  max-width: var(--ancho);
+  margin: 0 auto;
+  padding: var(--s8) var(--margen) var(--s10);
+}
 
 .pieza {
   position: relative;
-  min-height: 100svh;
-  width: 100%;
   display: grid;
-  grid-template-rows: 1fr auto;
-  align-items: center;
-  justify-items: center;
-  padding: calc(var(--nav) + var(--s6)) var(--margen) var(--s7);
+  grid-template-rows: auto 1fr;
+  gap: var(--s4);
+  align-content: start;
+  justify-items: stretch;
+  padding: 0;
   background: none;
   border: 0;
   cursor: pointer;
@@ -442,70 +443,92 @@ button { font: inherit; color: inherit; }
   text-align: left;
 }
 
-/* La entrada cuelga de una clase que pone el JS en el contenedor.
-
-   Sin esa clase las piezas estan puestas y visibles. Es la regla
-   de la casa: esconder la clase, nunca el estado por defecto. Una
+/* La aparicion cuelga de una clase que pone el JS en el
+   contenedor. Sin ella las piezas estan puestas y visibles: una
    pieza que necesita que corra un script para existir es una pieza
    que a veces no existe. */
-.piezas.observando .pieza__lamina,
-.piezas.observando .pieza__ficha {
+.piezas.observando .pieza {
   opacity: 0;
-  transition: opacity 0.75s var(--suave), transform 0.75s var(--entra);
+  transform: scale(0.97);
+  transition: opacity 0.6s var(--suave), transform 0.6s var(--entra);
 }
-.piezas.observando .pieza__lamina { transform: translate3d(-7vw, 0, 0) scale(0.96); }
-.piezas.observando .pieza__ficha  { transform: translate3d(-3vw, 0, 0); }
+.piezas.observando .pieza.dentro { opacity: 1; transform: none; }
 
-.piezas.observando .pieza.dentro .pieza__lamina,
-.piezas.observando .pieza.dentro .pieza__ficha {
-  opacity: 1;
-  transform: none;
-}
-/* La ficha entra un poco despues que la foto. */
-.piezas.observando .pieza.dentro .pieza__ficha { transition-delay: 0.12s; }
-
+/* LA FIGURA — es la que lleva la perspectiva y el area sensible.
+   Nunca se inclina, y por eso su caja sirve para medir el vuelo
+   hacia la ficha. */
 .pieza__lamina {
   position: relative;
   display: block;
-  height: min(
-    calc(100svh - var(--nav) - var(--s6) - 190px - var(--s6)),
-    calc(70vw * 1.25),
-    520px
-  );
-  width: auto;
+  height: clamp(280px, 26vw, 420px);
   aspect-ratio: 4 / 5;
-  overflow: hidden;
-  background: var(--arena);
-  border: 1px solid var(--linea);
+  width: auto;
+  margin: 0 auto;
+  perspective: 800px;
 }
-.pieza__lamina img { width: 100%; height: 100%; object-fit: cover; }
 
-/* El numeral enorme, detras de su pieza. Quieto: ya no acompania
-   ningun recorrido. */
-.pieza__numeral {
+/* LA CARTA — lo que se inclina. */
+.pieza__carta {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.pieza__carta img {
   position: absolute;
-  left: 50%; top: 50%;
-  z-index: -1;
-  font-family: var(--serif); font-weight: 300;
-  font-size: clamp(14rem, 42vw, 34rem);
-  line-height: 0.72; letter-spacing: -0.06em;
-  color: var(--noche);
-  opacity: 0.07;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid var(--linea);
+  background: var(--arena);
+  box-shadow: 0 18px 40px rgba(46, 29, 15, 0.18);
+  will-change: transform;
+  transform: translateZ(0);
+  /* Del gris al color al acercarse. Larga a proposito: es un
+     descubrimiento, no un interruptor. */
+  filter: grayscale(1);
+  transition: filter 900ms var(--suave);
+}
+.pieza:hover .pieza__carta img,
+.pieza:focus-visible .pieza__carta img { filter: grayscale(0); }
+
+.pieza__carta .plato__falta { z-index: 2; transform: translateZ(30px); }
+
+/* EL ROTULO — sigue al cursor y bascula con su velocidad.
+   Se coloca desde el JS; aca solo vive su forma. */
+.pieza__rotulo {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
   white-space: nowrap;
-  pointer-events: none; user-select: none;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-  transform: translate(-50%, -50%);
+  border-radius: var(--pastilla);
+  border: 1px solid rgba(246, 239, 225, 0.2);
+  background: rgba(26, 13, 6, 0.86);
+  color: rgba(246, 239, 225, 0.94);
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 20px rgba(26, 13, 6, 0.3);
+}
+/* Sin puntero fino no hay rotulo que valga: nunca se muestra. */
+@media not all and (hover: hover) and (pointer: fine) {
+  .pieza__rotulo { display: none; }
 }
 
 .pieza__ficha {
-  align-self: end;
+  align-self: start;
   width: 100%;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--s5);
+  gap: var(--s3);
 }
 
 .ficha__id {
@@ -828,7 +851,8 @@ button { font: inherit; color: inherit; }
     padding: var(--s9) var(--margen);
     border-top: 1px solid var(--linea);
   }
-  .pieza__lamina { height: auto; width: min(88vw, 460px); }
-  .pieza__numeral { display: none; }
-  .pieza__ficha { margin-top: var(--s6); }
+  .pieza__lamina { perspective: none; }
+  .pieza__carta { transform: none !important; }
+  .pieza__carta img { filter: none !important; }
+  .pieza__rotulo { display: none; }
 }
