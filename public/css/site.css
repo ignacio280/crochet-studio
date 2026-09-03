@@ -209,8 +209,6 @@ button { font: inherit; color: inherit; }
    NAVEGACIÓN
    ============================================================ */
 
-/* Arriba del todo la cabecera flota sobre el portico, que es
-   oscuro: ahi va en claro. Al despegarse vuelve al pergamino. */
 .cabecera {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -219,18 +217,6 @@ button { font: inherit; color: inherit; }
   border-bottom: 1px solid transparent;
   transition: background 0.4s var(--suave), border-color 0.4s var(--suave);
 }
-.cabecera:not(.pegada) .marca { color: #f4ead6; text-shadow: 0 1px 12px rgba(26,13,6,0.7); }
-.cabecera:not(.pegada) .indice a { color: #cbb894; text-shadow: 0 1px 12px rgba(26,13,6,0.7); }
-.cabecera:not(.pegada) .indice a:hover { color: #f4ead6; }
-.cabecera:not(.pegada) .menu-boton span { background: #f4ead6; }
-
-/* Revelado el paisaje, el fondo de arriba es cielo claro: la
-   cabecera tiene que darse vuelta o desaparece. */
-body.portico-abierto .cabecera:not(.pegada) .marca { color: var(--noche); text-shadow: none; }
-body.portico-abierto .cabecera:not(.pegada) .indice a { color: var(--tinta-70); text-shadow: none; }
-body.portico-abierto .cabecera:not(.pegada) .indice a:hover { color: var(--noche); }
-body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(--noche); }
-
 /* Fondo opaco, sin desenfoque.
 
    Un backdrop-filter obliga al navegador a releer y difuminar todo
@@ -288,180 +274,110 @@ body.portico-abierto .cabecera:not(.pegada) .menu-boton span { background: var(-
 }
 
 /* ============================================================
-   PORTICO — la camara sale por la ventana
+   UMBRAL — la entrada
 
-   El video no se reproduce: lo arrastra el scroll. La pagina
-   empuja la camara fuera de la habitacion, y al final del
-   recorrido el cuadro se queda quieto sobre el paisaje y aparece
-   el nombre.
-
-   Reemplaza al boton invisible, y sale ganando: no hay que
-   adivinar que hay algo que tocar, funciona igual con dedo que con
-   rueda, y el avance es reversible —se sube y la camara vuelve
-   adentro—.
-
-   Para que esto se pueda arrastrar, el video esta codificado con
-   un fotograma clave cada 0,25 s. El encode anterior tenia UNO
-   para los ocho segundos: cada salto obligaba a decodificar desde
-   el principio y se veia a tirones.
-
-   Ya no hay velo: el negro delante del cuadro se fue. Los textos
-   se sostienen solos —medido sobre el fotograma final, el nombre
-   en tinta oscura sobre el cielo da 14,1 y lo de abajo en crema
-   sobre el prado oscuro da 8,9—.
+   No es un hero con un banner: es el nudo, el nombre y la cuenta
+   real de la colección, y nada más.
    ============================================================ */
 
-.portico {
+.umbral {
   position: relative;
-  /* El alto lo escribe el JS: una pantalla mas el recorrido. */
-  background: var(--noche);
-}
-
-.portico__escenario {
-  position: sticky;
-  top: 0;
-  height: 100svh;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--nav) + var(--s8)) var(--margen) var(--s9);
   overflow: hidden;
-  isolation: isolate;
 }
 
-.portico__fondo {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: url('/video/ventana-inicio.webp?v=3') center / cover no-repeat, var(--noche);
-}
-/* Al llegar al final se cambia al fotograma fijo, que es de mas
-   resolucion que el video: el cuadro se mira quieto un rato y ahi
-   si se nota la nitidez. */
-.portico.revelado .portico__fondo {
-  background: url('/video/ventana-final.webp?v=3') center / cover no-repeat, var(--noche);
-}
-.portico__video {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.portico.revelado .portico__video { opacity: 0; }
+.umbral__centro { text-align: center; position: relative; z-index: 2; }
 
-.solo-lectores {
-  position: absolute;
-  width: 1px; height: 1px;
-  margin: -1px; padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
+.umbral__nudo {
+  width: clamp(64px, 8vw, 104px);
+  height: auto;
+  margin: 0 auto var(--s5);
+}
+.umbral__nudo path, .umbral__nudo circle {
+  fill: none;
+  stroke: var(--arcilla);
+  stroke-width: 1.4;
+  stroke-linecap: round;
 }
 
-/* El nombre vive en el cielo del fotograma final.
-
-   Visible por defecto: lo que esconde es la clase que pone el
-   JavaScript. Si el script no corre no hay viaje, pero el nombre,
-   la cuenta y el enlace estan puestos desde el principio. */
-.portico__centro {
-  position: absolute;
-  left: var(--margen); right: var(--margen);
-  top: 21%;
-  z-index: 2;
-  text-align: center;
-  transition: opacity 0.9s var(--suave), transform 0.9s var(--entra);
-}
-body.portico-cerrado .portico__centro {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(18px);
-}
-
-.portico__marca {
+.umbral__marca {
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(3.4rem, 13vw, 9rem);
   line-height: 0.9; letter-spacing: -0.04em;
-  color: var(--noche);
-  margin: 0;
+  color: var(--noche); margin: 0;
 }
-.portico__marca .letra { display: inline-block; }
+.umbral__marca .letra { display: inline-block; }
 
-.portico__pie {
+.umbral__pie {
   font-family: var(--mono); font-size: var(--t-micro);
-  letter-spacing: 0.24em; text-transform: uppercase;
-  color: var(--tinta-70);
-  margin: var(--s4) 0 0;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--tinta-45); margin: var(--s4) 0 0;
 }
 
-.portico__cuenta,
-.portico__baja {
+/* La cuenta de la colección, dicha como dato de archivo y no como
+   escasez fabricada: son las piezas que existen, nada más. */
+.umbral__cuenta {
   position: absolute;
-  z-index: 2;
-  transition: opacity 0.8s var(--suave) 0.25s, transform 0.8s var(--suave) 0.25s;
-}
-body.portico-cerrado .portico__cuenta,
-body.portico-cerrado .portico__baja { opacity: 0; transform: translateY(14px); }
-
-.portico__cuenta {
   left: var(--margen); bottom: var(--s8);
   font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: 0.16em; text-transform: uppercase;
-  color: #cbb894;
+  color: var(--tinta-45);
   display: grid; gap: var(--s1);
-  text-shadow: 0 1px 14px rgba(26,13,6,0.8);
 }
-.portico__cuenta b {
+.umbral__cuenta b {
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(2.4rem, 6vw, 4.5rem); line-height: 0.9;
-  color: #f4ead6; font-variant-numeric: tabular-nums;
+  color: var(--noche); font-variant-numeric: tabular-nums;
 }
 
-.portico__baja {
+.umbral__baja {
+  position: absolute;
   right: var(--margen); bottom: var(--s8);
   font-family: var(--mono); font-size: 10px;
   letter-spacing: 0.16em; text-transform: uppercase;
-  color: #cbb894;
+  color: var(--tinta-45);
   display: inline-flex; flex-direction: column; align-items: center; gap: var(--s2);
-  text-shadow: 0 1px 14px rgba(26,13,6,0.8);
 }
-.portico__baja::after {
+.umbral__baja::after {
   content: ""; width: 1px; height: 26px;
-  background: rgba(244,234,214,0.55);
+  background: var(--linea-fuerte);
   animation: tira 2.6s var(--suave) infinite;
   transform-origin: top;
 }
 @keyframes tira {
-  0%, 100% { transform: scaleY(0.35); opacity: 0.4; }
+  0%, 100% { transform: scaleY(0.35); opacity: 0.45; }
   50%      { transform: scaleY(1); opacity: 1; }
 }
 
 @media (max-width: 620px) {
-  .portico__centro { top: 17%; }
-  .portico__baja { display: none; }
+  .umbral__cuenta, .umbral__baja { position: static; margin-top: var(--s7); }
+  .umbral__cuenta { justify-items: center; text-align: center; }
+  .umbral__baja { display: none; }
 }
 
-/* La cabecera entera espera al revelado.
+/* La entrada va colgada de .anima, y esa clase la pone el JS solo
+   si la página se está viendo de verdad.
 
-   Durante el recorrido por la ventana no hay nada que navegar: la
-   pagina esta contando una sola cosa. El indice flotando encima
-   compite con el cuadro y ademas cae sobre zonas claras y oscuras
-   del video, donde no siempre se lee. Aparece cuando aparece el
-   nombre, y entonces ya hay un sitio donde ir.
+   Antes la portada arrancaba en opacity 0 y volvía a 1 al terminar
+   la animación. En una pestaña en segundo plano las animaciones no
+   arrancan nunca: la portada se quedaba en el primer fotograma, o
+   sea invisible, y el sitio se veía en blanco. Sin la clase no hay
+   animación y el contenido está simplemente ahí.
 
-   Esconde la CLASE, no el estado por defecto: si el JavaScript no
-   corre, `portico-cerrado` nunca se pone y la cabecera se ve. Un
-   menu que depende de un script para existir es un menu que a veces
-   no existe. */
-.cabecera { transition: opacity 0.9s var(--suave), background 0.4s var(--suave), border-color 0.4s var(--suave); }
-body.portico-cerrado .cabecera {
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;  /* fuera tambien del tabulador y del lector */
-}
-
+   La regla, para no repetirlo: nada que lleve información puede
+   depender de que una animación llegue a correr. */
 @media (prefers-reduced-motion: no-preference) {
-  .portico.revelado .portico__marca .letra {
-    animation: entraLetra 0.7s var(--muelle) backwards;
-    animation-delay: calc(var(--i) * 55ms);
-  }
+  .anima .umbral__marca .letra { animation: entraLetra 0.7s var(--muelle) backwards; animation-delay: calc(var(--i) * 60ms + 0.1s); }
+  .anima .umbral__nudo   { animation: entraNudo 0.8s var(--entra) 0s backwards; }
+  .anima .umbral__pie    { animation: sube 0.6s var(--suave) 0.3s backwards; }
+  .anima .umbral__cuenta { animation: sube 0.6s var(--suave) 0.4s backwards; }
+  .anima .umbral__baja   { animation: sube 0.6s var(--suave) 0.5s backwards; }
 }
 @keyframes entraLetra { from { opacity: 0; transform: translateY(0.4em) rotate(2deg); } to { opacity: 1; transform: none; } }
+@keyframes entraNudo  { from { opacity: 0; transform: scale(0.8) rotate(-12deg); } to { opacity: 1; transform: none; } }
 @keyframes sube       { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
 /* ============================================================
@@ -912,14 +828,6 @@ body.portico-cerrado .cabecera {
   }
   .aparece { opacity: 1; transform: none; }
   .cursor { display: none !important; }
-  /* Sin viaje: el paisaje del final con el nombre puesto. No se
-     pierde nada mas que el trayecto. */
-  .portico { height: auto !important; }
-  .portico__escenario { position: static; height: 100svh; }
-  .portico__video { display: none; }
-  .portico__fondo { background: url('/video/ventana-final.webp?v=3') center / cover no-repeat, var(--noche); }
-  .portico__centro, .portico__cuenta, .portico__baja { opacity: 1 !important; transform: none !important; }
-  .portico.revelado .portico__marca .letra { animation: none; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
   .piezas { height: auto !important; }
