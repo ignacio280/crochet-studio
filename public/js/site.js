@@ -472,6 +472,31 @@
      Un solo oyente para toda la página, y un cuadro por evento.
      Ni el escenario ni la cabecera piden el suyo por separado. */
 
+  /* ---------------- El peso del nombre ----------------
+
+     El nombre de la entrada va de Light a Extra Bold segun cuanto
+     se ha recorrido la portada. Como el resto del sitio, el JS
+     solo mide y escribe un numero —--peso, de 0 a 1—; el peso lo
+     resuelve la hoja de estilos. */
+
+  var umbral = null, umbralAlto = 1, pesoPuesto = -1;
+
+  function medirUmbral() {
+    umbral = document.querySelector('.umbral');
+    umbralAlto = umbral ? Math.max(1, umbral.offsetHeight) : 1;
+  }
+
+  function pesarMarca() {
+    if (!umbral) return;
+    var p = window.pageYOffset / umbralAlto;
+    if (p < 0) p = 0; else if (p > 1) p = 1;
+    // Un paso por milesima: no se reescribe el estilo por nada.
+    var q = Math.round(p * 1000) / 1000;
+    if (q === pesoPuesto) return;
+    pesoPuesto = q;
+    umbral.style.setProperty('--peso', q);
+  }
+
   function vigilarScroll() {
     var cab = document.querySelector('.cabecera');
     var pegadaAntes = false;
@@ -485,16 +510,26 @@
     }
 
     addEventListener('scroll', function () {
+      /* El peso va fuera del cuadro, al reves que el resto.
+
+         Es una sola escritura de propiedad, sin leer disposicion y
+         con guarda de milesima: no hay nada que agrupar. Y asi el
+         nombre tiene el peso correcto aunque el navegador este
+         racaneando cuadros, que es justo cuando mas se notaria que
+         se quedo atras. Lo caro —el escenario— sigue en su cuadro. */
+      pesarMarca();
       pedirAcomodo();
       if (pedido) return;
       pedido = true;
       requestAnimationFrame(marco);
     }, { passive: true });
 
+    medirUmbral();
+
     var reMedir;
     addEventListener('resize', function () {
       clearTimeout(reMedir);
-      reMedir = setTimeout(medirEscenario, 180);
+      reMedir = setTimeout(function () { medirUmbral(); medirEscenario(); }, 180);
     });
 
     // Las fotos entran tarde y cambian el alto de la lámina: hay

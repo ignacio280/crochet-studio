@@ -291,8 +291,25 @@ button { font: inherit; color: inherit; }
 
 .umbral__centro { text-align: center; position: relative; z-index: 2; }
 
+/* El nombre engorda con el scroll: de Light a Extra Bold mientras
+   la portada sale de pantalla.
+
+   Fraunces es variable y conserva el eje wght entero, de 100 a
+   900, asi que esto no son dos archivos ni un salto entre pesos:
+   es un solo trazo que se va cargando de tinta.
+
+   Se escribe con font-weight y no con font-variation-settings a
+   proposito. font-variation-settings desactiva el tamanio optico
+   automatico, y Fraunces trae eje opsz: a 9rem, con el opsz
+   clavado en su minimo de 9, el titulo saldria con el contraste
+   de un texto de nota al pie.
+
+   Y si el JavaScript no corre, --peso no existe, el calc da 300 y
+   el nombre se ve como siempre. La regla de la casa: esconder la
+   clase, nunca el estado por defecto. */
 .umbral__marca {
-  font-family: var(--serif); font-weight: 300;
+  font-family: var(--serif);
+  font-weight: calc(300 + var(--peso, 0) * 500);
   font-size: clamp(3.4rem, 13vw, 9rem);
   line-height: 0.9; letter-spacing: -0.04em;
   color: var(--noche); margin: 0;

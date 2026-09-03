@@ -29,7 +29,11 @@
 @font-face {
   font-family: 'Fraunces';
   src: url('/fonts/fraunces-var.woff2') format('woff2');
-  font-weight: 300 400;
+  /* El rango declarado tiene que ser el que trae el archivo.
+     Estaba en 300 400, asi que cualquier peso por encima de 400 se
+     recortaba en silencio: el titulo de la entrada pedia 800 y
+     recibia 400. El eje wght de Fraunces va de 100 a 900. */
+  font-weight: 100 900;
   font-style: normal;
   font-display: optional;
 }
