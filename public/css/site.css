@@ -379,10 +379,13 @@ button { font: inherit; color: inherit; }
   z-index: 1;
   pointer-events: none;
   background:
-    /* el charco del nombre */
+    /* El charco del nombre. Todos los alfas bajaron un cuarto al
+       pasar el texto a negro: con mas contraste en la letra hace
+       falta menos luz debajo, y la foto se ve mas. Medido, con el
+       velo al 75% el peor caso sigue pasando con margen 1,34. */
     radial-gradient(ellipse 62% 40% at 50% 45%,
-      rgba(246, 239, 225, 0.80) 0%,
-      rgba(246, 239, 225, 0.52) 45%,
+      rgba(246, 239, 225, 0.60) 0%,
+      rgba(246, 239, 225, 0.39) 45%,
       rgba(246, 239, 225, 0) 78%),
     /* La franja de abajo: cuenta y bajada.
 
@@ -391,30 +394,30 @@ button { font: inherit; color: inherit; }
        empezando en el 58% su borde de arriba caia todavia en zona
        sin proteger y se quedaba en 3,21 de contraste. */
     linear-gradient(to bottom,
-      rgba(246, 239, 225, 0.30) 0%,
+      rgba(246, 239, 225, 0.22) 0%,
       rgba(246, 239, 225, 0) 20%,
       rgba(246, 239, 225, 0) 48%,
-      rgba(246, 239, 225, 0.62) 74%,
-      rgba(246, 239, 225, 0.92) 100%);
+      rgba(246, 239, 225, 0.47) 74%,
+      rgba(246, 239, 225, 0.69) 100%);
 }
 
 /* La capa del texto, que ademas deriva en contra del cursor. */
 .umbral__capa { position: absolute; inset: 0; z-index: 2; }
 
-/* El texto de la portada, en cafe.
+/* El texto de la portada, en negro pleno.
 
-   Dos marrones y no uno, porque los minimos son distintos: el
-   nombre es texto grande y le basta 3:1, asi que puede irse mas
-   calido; el resto es texto chico y necesita 4,5, asi que se queda
-   un paso mas oscuro. Ese reparto es lo que deja llevar el nombre
-   —lo que de verdad se lee como el color de la pagina— a un cafe
-   claro sin que el pie se caiga.
+   Negro tiene luminancia cero, que es el maximo contraste posible
+   contra cualquier fondo. Por eso aqui no hace falta repartir en
+   dos tonos como cuando iba en cafe: todo aguanta con el mismo.
 
-   Sobre la foto el texto chico no puede ir en tinta-45 como en el
-   resto del sitio: medido, ese gris no llegaba al minimo ni con el
-   velo puesto. La jerarquia la sostienen el tamanio y el
-   espaciado, que no dependen del fondo. */
-.umbral__contenido .umbral__marca { color: #6b4423; }
+   Y por eso mismo el velo pudo aflojarse: con mas contraste en la
+   letra hace falta menos luz debajo, asi que la foto se ve mas.
+
+   Nota: sigue sin poder ir en tinta-45 como en el resto del sitio.
+   Ese gris no llegaba al minimo ni con el velo puesto. La jerarquia
+   la sostienen el tamanio y el espaciado, que no dependen del
+   fondo. */
+.umbral__contenido .umbral__marca { color: #000; }
 /* Colgado de .umbral__contenido y no suelto: las reglas propias de
    cada parte estan mas abajo en el archivo y, a igual especificidad,
    ganaban por orden. Con el contenedor delante gana esta, y ademas
@@ -423,7 +426,7 @@ button { font: inherit; color: inherit; }
 .umbral__contenido .umbral__cuenta,
 .umbral__contenido .umbral__cuenta b,
 .umbral__contenido .umbral__cuenta span,
-.umbral__contenido .umbral__baja { color: #452a14; }
+.umbral__contenido .umbral__baja { color: #000; }
 
 /* Y un halo del color contrario detras de cada letra.
 
