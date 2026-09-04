@@ -106,6 +106,11 @@
       contacto.push('<li><a href="mailto:' + escapar(s.email) + '">' + escapar(s.email) + '</a></li>');
     }
     $('pieContacto').innerHTML = contacto.join('') || '<li>Pronto</li>';
+
+    // Con el nombre y la cuenta ya escritos, la portada clona su
+    // copia en claro: asi las dos dicen lo mismo sin mantenerlas a
+    // mano por separado.
+    if (window.SDBUmbral) window.SDBUmbral.clonarClaro();
   }
 
   /* ---------------- Las láminas ----------------

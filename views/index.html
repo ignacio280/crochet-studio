@@ -12,7 +12,7 @@
 <link rel="preload" href="/fonts/garamond-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/plexmono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/letras.css?v=3">
-<link rel="stylesheet" href="/css/site.css?v=61">
+<link rel="stylesheet" href="/css/site.css?v=63">
 </head>
 <body>
 
@@ -45,19 +45,54 @@
 
 <main id="inicio">
 
-  <!-- ================= UMBRAL ================= -->
-  <section class="umbral">
-    <div class="umbral__centro">
-      <h1 class="umbral__marca" id="umbralMarca">{{MARCA}}</h1>
-      <p class="umbral__pie" id="umbralPie">{{TAGLINE}}</p>
-    </div>
+  <!-- ================= UMBRAL =================
+       La lana se teje bajo el cursor: debajo de la foto de los
+       ovillos hay otra de la pieza terminada, y una mancha que
+       sigue al puntero la va destapando. El texto que queda dentro
+       de la mancha se pone en claro, pixel a pixel. -->
+  <section class="umbral" id="umbral">
+    <img class="umbral__foto" src="/img/portada/lana.webp" alt="" draggable="false">
 
-    <div class="umbral__cuenta">
-      <b id="umbralCuenta">&mdash;</b>
-      <span id="umbralCuentaTexto">piezas en la colección</span>
-    </div>
+    <!-- Lineas que ondean, sobre la lana y bajo lo tejido. -->
+    <svg class="umbral__ondas" aria-hidden="true" preserveAspectRatio="none">
+      <path fill="none" stroke-width="1"></path>
+      <path fill="none" stroke-width="1"></path>
+      <path fill="none" stroke-width="1"></path>
+    </svg>
 
-    <a class="umbral__baja" href="#piezas" data-cursor="ir">Recorrer</a>
+    <!-- La mancha. Son circulos desenfocados y luego contrastados:
+         eso es lo que hace que se fundan en una sola forma. -->
+    <svg class="umbral__revelado" aria-hidden="true">
+      <defs>
+        <filter id="umbralGoo">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="borroso"/>
+          <feColorMatrix in="borroso" mode="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/>
+        </filter>
+        <mask id="umbralMascara">
+          <g id="umbralManchas" filter="url(#umbralGoo)" style="opacity:0"></g>
+        </mask>
+      </defs>
+      <image href="/img/portada/tejido.webp" width="100%" height="100%"
+             preserveAspectRatio="xMidYMid slice" mask="url(#umbralMascara)"></image>
+    </svg>
+
+    <div class="umbral__capa" id="umbralCapa">
+      <div class="umbral__contenido" id="umbralContenido">
+        <div class="umbral__centro">
+          <h1 class="umbral__marca" id="umbralMarca">{{MARCA}}</h1>
+          <p class="umbral__pie" id="umbralPie">{{TAGLINE}}</p>
+        </div>
+
+        <div class="umbral__cuenta">
+          <b id="umbralCuenta">&mdash;</b>
+          <span id="umbralCuentaTexto">piezas en la colección</span>
+        </div>
+
+        <a class="umbral__baja" href="#piezas" data-cursor="ir">Recorrer</a>
+      </div>
+      <!-- La copia en claro la clona el JS aqui, recortada a la mancha. -->
+    </div>
   </section>
 
   <!-- ================= LAS PIEZAS =================
@@ -110,6 +145,7 @@
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
-<script src="/js/site.js?v=48"></script>
+<script src="/js/umbral.js?v=1"></script>
+<script src="/js/site.js?v=49"></script>
 </body>
 </html>
