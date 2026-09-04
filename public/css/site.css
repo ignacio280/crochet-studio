@@ -356,29 +356,46 @@ button { font: inherit; color: inherit; }
    a una foto oscura, esto tiene que volverse claro. */
 .umbral__ondas path { stroke: rgba(46, 29, 15, 0.22); }
 
-/* Un velo de papel entre las fotos y el texto.
+/* Luz donde hay texto, foto donde no la hay.
 
-   Hace falta, y esta medido. Bajo un mismo texto la foto pasa de
-   0,008 a 0,78 de luminancia —sombra profunda de la mesa a madera
-   iluminada—, asi que ningun color de letra funciona en toda su
-   extension: la cuenta en tinta daba 1,12 de contraste donde hacen
-   falta 4,5, y el nombre 2,28 donde hacen falta 3.
+   Antes esto era un manto uniforme de papel sobre toda la imagen, y
+   se comia la foto entera para proteger cuatro trozos de texto.
 
-   El velo sube el suelo de luminancia sin tapar la foto. Va encima
-   de las DOS —la lana y lo tejido— para que el contraste no dependa
-   de cual se este viendo en cada punto. Es la unica capa que dulcifica
-   la imagen, y por eso se queda en lo justo. */
+   Ahora son charcos: un ovalo centrado bajo el nombre, una franja
+   abajo para la cuenta y la bajada, y un hilo arriba por la
+   cabecera. En el resto —las esquinas, los bordes, todo el aire de
+   alrededor— la foto llega casi limpia.
+
+   Hace falta igual, y esta medido: bajo un mismo texto la foto pasa
+   de 0,008 a 0,78 de luminancia, asi que ningun color de letra
+   aguanta en toda su extension. Lo que cambia es que ahora ese
+   suelo se levanta solo donde hace falta.
+
+   Va sobre las DOS fotos —la lana y lo tejido— para que el
+   contraste no dependa de cual se este viendo en cada punto. */
 .umbral__velo {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(246, 239, 225, 0.66) 0%,
-    rgba(246, 239, 225, 0.60) 34%,
-    rgba(246, 239, 225, 0.64) 62%,
-    rgba(246, 239, 225, 0.88) 100%);
+  background:
+    /* el charco del nombre */
+    radial-gradient(ellipse 62% 40% at 50% 45%,
+      rgba(246, 239, 225, 0.80) 0%,
+      rgba(246, 239, 225, 0.52) 45%,
+      rgba(246, 239, 225, 0) 78%),
+    /* La franja de abajo: cuenta y bajada.
+
+       Arranca en el 48% y no mas abajo porque la cuenta ocupa del
+       80% al 91% de la altura, y su numero es grande: con la rampa
+       empezando en el 58% su borde de arriba caia todavia en zona
+       sin proteger y se quedaba en 3,21 de contraste. */
+    linear-gradient(to bottom,
+      rgba(246, 239, 225, 0.30) 0%,
+      rgba(246, 239, 225, 0) 20%,
+      rgba(246, 239, 225, 0) 48%,
+      rgba(246, 239, 225, 0.62) 74%,
+      rgba(246, 239, 225, 0.92) 100%);
 }
 
 /* La capa del texto, que ademas deriva en contra del cursor. */
