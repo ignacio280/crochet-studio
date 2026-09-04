@@ -779,9 +779,25 @@
     c.style.top = caja.top + 'px';
     c.style.width = caja.width + 'px';
     c.style.height = caja.height + 'px';
+    /* El clon nace con el color que la copia tiene AHORA MISMO, sea
+       el virado de reposo, el color pleno del cursor encima, o un
+       punto intermedio si la transicion de 900 ms iba a medias.
+       Empezar en cualquier otro sitio es un salto al despegar. */
+    var fuente = plato.querySelector('.pieza__carta img');
+    var foto = c.querySelector('.pieza__carta img');
+    if (fuente && foto) {
+      c.dataset.filtro = getComputedStyle(fuente).filter;
+      foto.style.filter = c.dataset.filtro;
+    }
+
     document.body.appendChild(c);
     return c;
   }
+
+  // El color de destino, escrito entero y no como "none": asi las
+  // dos puntas tienen la misma lista de funciones y el navegador
+  // puede interpolar entre ellas en vez de dar un corte.
+  var COLOR_PLENO = 'sepia(0) saturate(1) contrast(1) brightness(1)';
 
   // La transformada que lleva una caja encima de otra, con origen
   // arriba a la izquierda. Las dos son 4:5, asi que una sola
@@ -893,6 +909,12 @@
     var desde = lamina.getBoundingClientRect();
     var hacia = cajaSinInclinar(plato);
     var clon = clonVolador(plato, desde);
+    /* De vuelta el clon sale de la lamina de la ficha, que va a
+       color, y aterriza sobre la copia, que sigue a color por la
+       clase de volar. Mismo color en las dos puntas: nada que
+       interpolar y nada que saltar. */
+    var fotoVuelta = clon.querySelector('.pieza__carta img');
+    if (fotoVuelta) fotoVuelta.style.filter = COLOR_PLENO;
     lamina.style.visibility = 'hidden';
     // La pieza se enciende mientras el plato vuelve, no despues:
     // el texto ya esta puesto cuando la foto se planta.

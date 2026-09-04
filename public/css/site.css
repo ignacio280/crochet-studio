@@ -811,19 +811,36 @@ button { font: inherit; color: inherit; }
 }
 .vuelo .plato__falta { display: none; }
 
-/* El clon vuela a color, no virado.
+/* El color del clon lo lleva el JS, no esta hoja.
 
-   Hereda de .pieza__carta img, que en reposo lleva el sepia. Pero
-   el clon no esta dentro de una .pieza, asi que la regla de :hover
-   que lo quita no le alcanza: salia virado mientras el original
-   bajo el cursor estaba a color y la lamina de la ficha, su
-   destino, tambien. Se veia un segundo en blanco y negro en mitad
-   del viaje, con un salto al despegar y otro al aterrizar.
+   El viaje tiene que empezar con el color exacto que tenia la copia
+   en el momento del clic y acabar con el de la lamina de la ficha,
+   que va a color. Eso no se puede escribir aqui: depende de si la
+   copia estaba bajo el cursor, y hasta de si su transicion de 900
+   ms iba a medias. Se lee al vuelo y se interpola.
 
-   Y sin transicion: la de 900 ms del virado convertiria el cambio
-   en un desvanecido justo mientras la foto viaja. */
-.vuelo .pieza__carta img {
+   Lo unico que va aqui es apagar la transicion, para que no se
+   pelee con la interpolacion. */
+.vuelo .pieza__carta img { transition: none; }
+
+/* Mientras su foto esta volando o abierta, la copia se queda a
+   color.
+
+   Es lo que evita el salto al cerrar: el clon aterriza a color y
+   debajo aparece una copia que tambien lo esta. Al quitarse la
+   clase, el virado vuelve con su transicion de 900 ms, que es un
+   desvanecido y no un corte. */
+.pieza.volando .pieza__carta img {
   filter: none;
+  /* Al instante, sin transicion.
+
+     Con los 900 ms del virado, la copia iria a medio camino cuando
+     el clon aterriza a color pleno, y esa diferencia es justo el
+     salto que se quiere evitar. Puesta de golpe coinciden exacto.
+     Nadie ve el corte porque durante el vuelo la copia esta oculta.
+
+     Al quitarse la clase vuelve a mandar la regla de arriba, que si
+     lleva los 900 ms: el virado regresa como un desvanecido. */
   transition: none;
 }
 @media (max-width: 860px) { .universo__caja { grid-template-columns: 1fr; } }
