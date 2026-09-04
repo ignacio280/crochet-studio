@@ -566,9 +566,19 @@ button { font: inherit; color: inherit; }
    La regla, para no repetirlo: nada que lleve información puede
    depender de que una animación llegue a correr. */
 @media (prefers-reduced-motion: no-preference) {
-  /* La foto entra abriendose: arranca un poco mas cerca y se
-     asienta. Es lo que hace que la portada se sienta encendida y no
-     puesta. */
+  /* La foto entra tejiendose.
+
+     No es un fundido: son filas que crecen de lado a lado,
+     alternando el sentido en cada una, que es literalmente como se
+     hace una labor de crochet —una vuelta, se gira, y de vuelta—.
+     Empiezan por abajo, como se empieza una prenda.
+
+     El recorte lo pone el JS junto con las barras, y las quita al
+     terminar: una mascara viva cuesta composicion en cada cuadro, y
+     esta solo tiene sentido durante segundo y medio.
+
+     La escala se queda, pero mas corta: acompania al tejido en vez
+     de ser el efecto. */
   .anima .umbral__foto  { animation: entraFoto 2.2s var(--entra) backwards; }
   .anima .umbral__ondas { animation: apareceOnda 1.4s var(--suave) 0.5s backwards; }
 
@@ -581,7 +591,17 @@ button { font: inherit; color: inherit; }
   .anima .umbral__cuenta { animation: sube 0.6s var(--suave) 1.3s backwards; }
   .anima .umbral__baja   { animation: sube 0.6s var(--suave) 1.4s backwards; }
 }
-@keyframes entraFoto   { from { opacity: 0; transform: scale(1.09); } to { opacity: 1; transform: none; } }
+@keyframes entraFoto   { from { transform: scale(1.06); } to { transform: none; } }
+
+/* Cada fila crece desde su lado. El origen y el retardo los escribe
+   el JS en cada barra, porque dependen de cuantas filas haya. */
+.umbral__foto.tejida {
+  -webkit-mask-image: url(#umbralTejer);
+  mask-image: url(#umbralTejer);
+}
+#umbralTejer rect { transform-box: fill-box; }
+.tejiendo #umbralTejer rect { animation: tejerFila 0.62s var(--entra) backwards; }
+@keyframes tejerFila { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes apareceOnda { from { opacity: 0; } to { opacity: 1; } }
 @keyframes apareceVelo { from { opacity: 0; } to { opacity: 1; } }
 @keyframes entraLetra { from { opacity: 0; transform: translateY(0.4em) rotate(2deg); } to { opacity: 1; transform: none; } }

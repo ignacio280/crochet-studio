@@ -14,7 +14,7 @@
 <link rel="preload" href="/img/portada/lana.jpeg" as="image">
 <link rel="preload" href="/img/portada/tejido.jpeg" as="image">
 <link rel="stylesheet" href="/css/letras.css?v=3">
-<link rel="stylesheet" href="/css/site.css?v=75">
+<link rel="stylesheet" href="/css/site.css?v=76">
 </head>
 <body>
 
@@ -75,6 +75,11 @@
         <mask id="umbralMascara">
           <g id="umbralManchas" filter="url(#umbralGoo)" style="opacity:0"></g>
         </mask>
+
+        <!-- La foto entra tejida: filas que crecen alternando lado.
+             Las barras las pone el JS, y solo si la pagina se esta
+             viendo; sin ellas la foto se ve entera y quieta. -->
+        <mask id="umbralTejer"></mask>
       </defs>
       <image href="/img/portada/tejido.jpeg" width="100%" height="100%"
              preserveAspectRatio="xMidYMid slice" mask="url(#umbralMascara)"></image>
@@ -150,7 +155,7 @@
 
 <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
 
-<script src="/js/umbral.js?v=6"></script>
+<script src="/js/umbral.js?v=8"></script>
 <script src="/js/site.js?v=50"></script>
 </body>
 </html>

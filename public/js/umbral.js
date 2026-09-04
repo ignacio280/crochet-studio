@@ -66,6 +66,24 @@
   var INTRO_ESPERA = 900;    // ms antes de empezar; deja entrar la foto
   var INTRO_DURA = 2500;
 
+  /* El tejido de la foto.
+
+     La foto no aparece de un fundido: se teje. Filas que crecen de
+     lado a lado, alternando el sentido en cada una —una vuelta, se
+     gira, y de vuelta—, empezando por abajo, que es como se empieza
+     una prenda.
+
+     Las barras se ponen desde aqui y no en el HTML por dos motivos.
+     Uno, son catorce y dependen de un numero que conviene tener en
+     un sitio. Y dos, y este es el que importa: una mascara SVG que
+     no existe no deja el elemento sin recortar, lo deja INVISIBLE.
+     Si esto se declarara en el HTML y el JS fallara, la portada se
+     quedaria en blanco. Poniendolo aqui, sin JS no hay mascara y la
+     foto se ve entera. */
+  var FILAS = 14;
+  var FILA_DURA = 620;
+  var FILA_PASO = 55;
+
   /* La copia en claro del texto se quito.
 
      El efecto la usa para que la letra siga legible sobre la foto
@@ -128,6 +146,44 @@
     }
     arrancarIntro();
     document.addEventListener('visibilitychange', arrancarIntro);
+
+    function tejerFoto() {
+      var foto = caja.querySelector('.umbral__foto');
+      var mascara = document.getElementById('umbralTejer');
+      if (!foto || !mascara || reducido || mascara.childNodes.length) return;
+      if (document.visibilityState !== 'visible') return;
+
+      var alto = (100 / FILAS);
+      for (var f = 0; f < FILAS; f++) {
+        var b = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        b.setAttribute('x', '0');
+        // +0.6 de solape: sin el, entre fila y fila queda una linea
+        // de un pixel sin cubrir y la foto sale a rayas.
+        b.setAttribute('y', (f * alto) + '%');
+        b.setAttribute('width', '100%');
+        b.setAttribute('height', (alto + 0.6) + '%');
+        b.setAttribute('fill', 'white');
+        // Se alternan los lados, y se empieza por la fila de abajo.
+        b.style.transformOrigin = (f % 2 ? '100%' : '0%') + ' 50%';
+        b.style.animationDelay = ((FILAS - 1 - f) * FILA_PASO) + 'ms';
+        mascara.appendChild(b);
+      }
+
+      foto.classList.add('tejida');
+      document.documentElement.classList.add('tejiendo');
+
+      /* Al terminar se quita el recorte. Una mascara viva cuesta
+         composicion en cada cuadro y esta solo tiene sentido
+         mientras dura la entrada. */
+      setTimeout(function () {
+        foto.classList.remove('tejida');
+        document.documentElement.classList.remove('tejiendo');
+        while (mascara.firstChild) mascara.removeChild(mascara.firstChild);
+      }, FILA_DURA + FILAS * FILA_PASO + 400);
+    }
+
+    tejerFoto();
+    document.addEventListener('visibilitychange', tejerFoto);
 
     caja.addEventListener('pointermove', function (e) {
       intro = false;   // manda la persona
