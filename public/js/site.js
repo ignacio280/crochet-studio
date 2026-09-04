@@ -84,9 +84,6 @@
     $('umbralCuentaTexto').textContent = total === 1 ? 'pieza en la colección' : 'piezas en la colección';
     $('cuentaIndice').textContent = '(' + nn(total) + ')';
 
-    $('manifiestoTexto').textContent = s.heroTitulo || '';
-    $('manifiestoNota').textContent = s.heroTexto || '';
-
     $('pieMarca').textContent = s.marca || '';
     $('pieTexto').textContent = s.tagline || '';
     // La Ley del Consumidor pide que el vendedor esté identificado.
@@ -995,24 +992,6 @@
     else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
   }
 
-  /* ---------------- Aparición ---------------- */
-
-  var observador = null;
-  function observarAparicion() {
-    if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll('.aparece').forEach(function (el) { el.classList.add('visible'); });
-      return;
-    }
-    if (!observador) {
-      observador = new IntersectionObserver(function (entradas) {
-        entradas.forEach(function (e) {
-          if (e.isIntersecting) { e.target.classList.add('visible'); observador.unobserve(e.target); }
-        });
-      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-    }
-    document.querySelectorAll('.aparece:not(.visible)').forEach(function (el) { observador.observe(el); });
-  }
-
   /* ---------------- Eventos ---------------- */
 
   function conectarEventos() {
@@ -1068,12 +1047,8 @@
       pintarEscenas();
       conectarEventos();
       vigilarScroll();
-      observarAparicion();
     })
     .catch(function () {
-      // Si los datos no llegan, lo fijo tiene que verse igual: si
-      // no, media página se queda en opacidad 0 para siempre.
-      document.querySelectorAll('.aparece').forEach(function (el) { el.classList.add('visible'); });
       $('piezas').innerHTML = '<div class="vacio"><p>No se pudo cargar la colección.</p>' +
         '<p style="margin:0">Revisa tu conexión y recarga la página.</p></div>';
       aviso('No se pudo cargar la tienda. Recarga la página.');

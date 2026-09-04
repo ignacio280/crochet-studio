@@ -427,25 +427,6 @@ button { font: inherit; color: inherit; }
 @keyframes sube       { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
 /* ============================================================
-   MANIFIESTO — tipografía como material
-   ============================================================ */
-
-.manifiesto {
-  padding: var(--s10) 0;
-  border-top: 1px solid var(--linea);
-  position: relative;
-}
-.manifiesto__texto {
-  font-family: var(--serif); font-weight: 300;
-  font-size: clamp(1.6rem, 4.4vw, 3.4rem);
-  line-height: 1.12; letter-spacing: -0.03em;
-  color: var(--noche);
-  max-width: 22ch;
-  margin: 0 0 var(--s7);
-  white-space: pre-line;
-}
-.manifiesto__nota { color: var(--tinta-70); max-width: 46ch; }
-/* ============================================================
    LAS PIEZAS — el scroll las pasa de lado, una a la vez
 
    Se baja por la pagina y la coleccion avanza en horizontal. Una
@@ -999,13 +980,6 @@ button { font: inherit; color: inherit; }
 .aviso.visible { opacity: 1; transform: translate(-50%, 0); }
 
 /* Mismo criterio: sin .anima esto no se esconde nunca. */
-.anima .aparece {
-  opacity: 0; transform: translateY(18px);
-  transition: opacity 0.7s var(--suave), transform 0.7s var(--suave);
-  transition-delay: calc(var(--i, 0) * 70ms);
-}
-.anima .aparece.visible { opacity: 1; transform: none; }
-
 /* ============================================================
    Menos movimiento
 
@@ -1021,7 +995,6 @@ button { font: inherit; color: inherit; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .aparece { opacity: 1; transform: none; }
   .cursor { display: none !important; }
   body.cursor-propio, body.cursor-propio a, body.cursor-propio button { cursor: auto; }
 
