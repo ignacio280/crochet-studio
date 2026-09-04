@@ -320,16 +320,45 @@
     umbral.style.setProperty('--peso', q);
   }
 
+  var CABECERA_ARRIBA = 100;   // por debajo de esto siempre esta puesta
+  var CABECERA_GESTO = 4;      // px de movimiento antes de hacer caso
+
   function vigilarScroll() {
     var cab = document.querySelector('.cabecera');
-    var pegadaAntes = false;
+    var pegadaAntes = false, ocultaAntes = false, yAntes = 0;
     var pedido = false;
 
     function marco() {
       pedido = false;
+      var y = window.pageYOffset;
+
       // A los 100 px: encoge y se vuelve cristal.
-      var pegada = window.pageYOffset > 100;
+      var pegada = y > CABECERA_ARRIBA;
       if (pegada !== pegadaAntes) { cab.classList.toggle('pegada', pegada); pegadaAntes = pegada; }
+
+      /* Se va del todo al bajar, y vuelve al subir.
+
+         Se esconde por SENTIDO y no por altura: si desapareciera
+         para siempre pasados unos pixeles, no habria forma de
+         volver al indice sin subir hasta arriba del todo. Asi basta
+         empujar hacia arriba para tenerla.
+
+         El umbral de cuatro pixeles es para que un temblor de dedo
+         o el rebote del final de la pagina no la hagan parpadear.
+
+         Y arriba del todo siempre esta: si no, quien llega a la
+         pagina y baja tres pixeles se queda sin cabecera antes de
+         haberla visto. */
+      var d = y - yAntes;
+      var oculta = ocultaAntes;
+      if (y <= CABECERA_ARRIBA) oculta = false;
+      else if (d > CABECERA_GESTO) oculta = true;
+      else if (d < -CABECERA_GESTO) oculta = false;
+      // Con la ficha abierta la pagina no se mueve: nada que esconder.
+      if (document.body.classList.contains('sin-scroll')) oculta = false;
+
+      if (oculta !== ocultaAntes) { cab.classList.toggle('oculta', oculta); ocultaAntes = oculta; }
+      yAntes = y;
     }
 
     addEventListener('scroll', function () {

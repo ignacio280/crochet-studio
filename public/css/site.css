@@ -216,9 +216,31 @@ button { font: inherit; color: inherit; }
   background: rgba(246, 239, 225, 0);
   border-bottom: 1px solid transparent;
   transition:
+    transform 0.45s var(--suave),
     background 0.4s var(--suave),
     border-color 0.4s var(--suave),
-    backdrop-filter 0.4s var(--suave);
+    backdrop-filter 0.4s var(--suave),
+    visibility 0s;
+}
+
+/* Fuera de pantalla al bajar.
+
+   Va con visibility ademas del desplazamiento, y con el retardo
+   justo para que llegue cuando ya se ha ido: una cabecera que solo
+   esta movida sigue estando, y el tabulador la encontraria fuera de
+   la ventana, donde no se puede ver el foco. Al volver, la
+   visibilidad entra sin retardo para que el deslizamiento se vea
+   desde el primer cuadro. */
+.cabecera.oculta {
+  transform: translateY(-100%);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 0.45s var(--suave),
+    background 0.4s var(--suave),
+    border-color 0.4s var(--suave),
+    backdrop-filter 0.4s var(--suave),
+    visibility 0s 0.45s;
 }
 .cabecera__fila {
   transition: height 0.4s var(--suave);
