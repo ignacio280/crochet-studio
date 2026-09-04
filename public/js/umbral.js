@@ -39,40 +39,24 @@
   var $ = function (id) { return document.getElementById(id); };
   var quieto = matchMedia('(prefers-reduced-motion: reduce)');
 
-  var RADIO = 130;         // px en reposo
+  var RADIO = 210;         // px en reposo
   var COLA = 5;            // cuantas manchas van detras
   var SUAVIZADO = 0.16;    // 0 a 1; mas bajo, mas suelta
   var RESPUESTA_VEL = 1;   // cuanto se estira con la velocidad
   var PARALAJE = 14;       // px de deriva del texto, en contra del cursor
   var MUESTRAS_ONDA = 28;
 
-  /* La copia en claro del texto.
+  /* La copia en claro del texto se quito.
 
-     Se clona en vez de escribirse dos veces en el HTML para que no
-     haya dos verdades que mantener: el nombre y la cuenta los
-     rellena el otro archivo, y clonar despues garantiza que digan
-     lo mismo.
+     El efecto la usa para que la letra siga legible sobre la foto
+     de abajo, dando por hecho que esa foto es oscura. Las de aqui
+     son las dos claras —madera y lino—, asi que la copia blanca
+     tenia entre 1,12 y 1,38 de contraste sobre lo revelado: era
+     ella la que hacia desaparecer el texto al pasar la mancha.
 
-     Va sin ids —duplicarlos rompe getElementById— y marcada como
-     oculta e inerte, para que ni el lector de pantalla ni el
-     tabulador se encuentren el texto dos veces. */
-  function clonarClaro() {
-    var origen = $('umbralContenido');
-    var capa = $('umbralCapa');
-    if (!origen || !capa) return;
-
-    var viejo = capa.querySelector('.umbral__contenido--claro');
-    if (viejo) capa.removeChild(viejo);
-
-    var copia = origen.cloneNode(true);
-    copia.classList.add('umbral__contenido--claro');
-    copia.removeAttribute('id');
-    copia.setAttribute('aria-hidden', 'true');
-    copia.setAttribute('inert', '');
-    var conId = copia.querySelectorAll('[id]');
-    for (var i = 0; i < conId.length; i++) conId[i].removeAttribute('id');
-    capa.appendChild(copia);
-  }
+     El gancho se mantiene por si vuelve, y para no romper la
+     llamada del otro archivo. */
+  function clonarClaro() {}
 
   function armar() {
     var caja = $('umbral');

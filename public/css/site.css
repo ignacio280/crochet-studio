@@ -356,8 +356,61 @@ button { font: inherit; color: inherit; }
    a una foto oscura, esto tiene que volverse claro. */
 .umbral__ondas path { stroke: rgba(46, 29, 15, 0.22); }
 
+/* Un velo de papel entre las fotos y el texto.
+
+   Hace falta, y esta medido. Bajo un mismo texto la foto pasa de
+   0,008 a 0,78 de luminancia —sombra profunda de la mesa a madera
+   iluminada—, asi que ningun color de letra funciona en toda su
+   extension: la cuenta en tinta daba 1,12 de contraste donde hacen
+   falta 4,5, y el nombre 2,28 donde hacen falta 3.
+
+   El velo sube el suelo de luminancia sin tapar la foto. Va encima
+   de las DOS —la lana y lo tejido— para que el contraste no dependa
+   de cual se este viendo en cada punto. Es la unica capa que dulcifica
+   la imagen, y por eso se queda en lo justo. */
+.umbral__velo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(246, 239, 225, 0.58) 0%,
+    rgba(246, 239, 225, 0.52) 34%,
+    rgba(246, 239, 225, 0.56) 62%,
+    rgba(246, 239, 225, 0.80) 100%);
+}
+
 /* La capa del texto, que ademas deriva en contra del cursor. */
 .umbral__capa { position: absolute; inset: 0; z-index: 2; }
+
+/* Sobre la foto, el texto pequenio sube a tinta plena.
+
+   En el resto del sitio va en tinta-45, que sobre pergamino se lee
+   de sobra y da jerarquia. Sobre una fotografia no: medido, ese gris
+   no llegaba al minimo ni con el velo puesto. La jerarquia la
+   sostienen el tamanio y el espaciado, que no dependen del fondo. */
+/* Colgado de .umbral__contenido y no suelto: las reglas propias de
+   cada parte estan mas abajo en el archivo y, a igual especificidad,
+   ganaban por orden. Con el contenedor delante gana esta, y ademas
+   no aplica fuera de la portada. */
+.umbral__contenido .umbral__pie,
+.umbral__contenido .umbral__cuenta,
+.umbral__contenido .umbral__cuenta span,
+.umbral__contenido .umbral__baja { color: var(--tinta); }
+
+/* Y un halo del color contrario detras de cada letra.
+
+   El velo arregla el promedio; el halo arregla los picos. Sobre una
+   foto siempre queda algun trozo que se sale del rango, y un
+   resplandor del color opuesto separa la letra de lo que tenga
+   detras sin tener que oscurecer mas la imagen. */
+.umbral__contenido {
+  text-shadow:
+    0 1px 2px rgba(246, 239, 225, 0.7),
+    0 0 24px rgba(246, 239, 225, 0.85);
+}
+
 
 .umbral__contenido {
   position: absolute;
@@ -367,25 +420,26 @@ button { font: inherit; color: inherit; }
   padding: calc(var(--nav) + var(--s8)) var(--margen) var(--s9);
 }
 
-/* La copia en claro, recortada a la misma mancha.
+/* AQUI VIVIA LA COPIA EN CLARO DEL TEXTO, Y SE QUITO
 
-   Es lo que hace que el nombre se aclare SOLO en la parte que la
-   mancha esta tapando de verdad, pixel a pixel, en vez de cambiar
-   entero de golpe. A 9 rem de letra, lo segundo se ve mal.
+   El efecto original pinta el texto dos veces y recorta una copia
+   blanca a la mancha, para que la letra siga legible sobre
+   cualquiera de las dos fotos. Eso da por hecho que la foto de
+   abajo es oscura.
 
-   Va con !important porque tiene que ganarle a los colores propios
-   de cada trozo de texto —el nombre en noche, el pie en tinta-45,
-   la cuenta en dos colores—, y son varios. */
-.umbral__contenido--claro {
-  pointer-events: none;
-  -webkit-mask-image: url(#umbralMascara);
-  mask-image: url(#umbralMascara);
-}
-.umbral__contenido--claro,
-.umbral__contenido--claro * {
-  color: var(--papel) !important;
-}
-.umbral__contenido--claro .umbral__baja::after { background: var(--papel); }
+   Estas dos no lo son: los ovillos y el chaleco estan los dos en
+   madera clara y lino crudo. Medido, el texto claro sobre la foto
+   revelada daba entre 1,12 y 1,38 de contraste, cuando el minimo es
+   3 para el nombre y 4,5 para el resto. O sea que la propia
+   inversion era lo que hacia desaparecer el texto al pasar la
+   mancha por encima.
+
+   Asi que el texto se queda en tinta sobre las dos, y el velo se
+   encarga de que eso se sostenga. Medido con las dos fotos: el peor
+   caso pasa con un 25% de margen sobre el minimo.
+
+   Si algun dia la foto revelada pasa a ser oscura, esto vuelve: son
+   la copia clonada, su mascara y su halo. */
 
 .umbral__centro { text-align: center; position: relative; z-index: 2; }
 
