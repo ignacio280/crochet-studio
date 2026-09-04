@@ -11,8 +11,10 @@
 <link rel="preload" href="/fonts/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/garamond-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/plexmono-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/img/portada/lana.jpeg" as="image">
+<link rel="preload" href="/img/portada/tejido.jpeg" as="image">
 <link rel="stylesheet" href="/css/letras.css?v=3">
-<link rel="stylesheet" href="/css/site.css?v=63">
+<link rel="stylesheet" href="/css/site.css?v=64">
 </head>
 <body>
 
@@ -51,7 +53,8 @@
        sigue al puntero la va destapando. El texto que queda dentro
        de la mancha se pone en claro, pixel a pixel. -->
   <section class="umbral" id="umbral">
-    <img class="umbral__foto" src="/img/portada/lana.webp" alt="" draggable="false">
+    <img class="umbral__foto" src="/img/portada/lana.jpeg" alt="" draggable="false"
+         fetchpriority="high" decoding="async">
 
     <!-- Lineas que ondean, sobre la lana y bajo lo tejido. -->
     <svg class="umbral__ondas" aria-hidden="true" preserveAspectRatio="none">
@@ -73,7 +76,7 @@
           <g id="umbralManchas" filter="url(#umbralGoo)" style="opacity:0"></g>
         </mask>
       </defs>
-      <image href="/img/portada/tejido.webp" width="100%" height="100%"
+      <image href="/img/portada/tejido.jpeg" width="100%" height="100%"
              preserveAspectRatio="xMidYMid slice" mask="url(#umbralMascara)"></image>
     </svg>
 
