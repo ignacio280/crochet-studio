@@ -46,6 +46,26 @@
   var PARALAJE = 14;       // px de deriva del texto, en contra del cursor
   var MUESTRAS_ONDA = 28;
 
+  /* El recorrido de presentacion.
+
+     Al cargar, la mancha hace sola una pasada por la portada y
+     vuelve a irse. No es adorno: sin ella, quien llega no tiene
+     forma de saber que hay una segunda foto debajo ni que el cursor
+     la destapa. La pasada lo ensenia en dos segundos y medio y
+     luego se aparta.
+
+     Va de abajo a la izquierda hasta arriba a la derecha, pasando
+     por el centro, que es donde esta el nombre: asi lo tejido
+     aparece justo detras del titulo, que es el momento que se
+     quiere que se vea.
+
+     Y manda siempre la persona: al primer movimiento de raton real
+     la presentacion se corta en seco. Nada peor que una animacion
+     que sigue haciendo lo suyo mientras alguien intenta usar la
+     pagina. */
+  var INTRO_ESPERA = 900;    // ms antes de empezar; deja entrar la foto
+  var INTRO_DURA = 2500;
+
   /* La copia en claro del texto se quito.
 
      El efecto la usa para que la letra siga legible sobre la foto
@@ -91,7 +111,26 @@
     var puntero = { x: -9999, y: -9999, dentro: false };
     var velocidad = 0, presencia = 0, aLaVista = true, t0 = 0;
 
+    /* La presentacion espera a que la pagina se vea.
+
+       En una pestania de fondo no hay cuadros: si el reloj arrancara
+       igual, alguien que abre el sitio en segundo plano y vuelve un
+       minuto despues se encontraria la pasada ya terminada, o a
+       medias. Asi que el reloj no empieza al cargar, empieza cuando
+       la pagina esta delante. */
+    var intro = !reducido;
+    var introT0 = null;
+
+    function arrancarIntro() {
+      if (introT0 === null && document.visibilityState === 'visible') {
+        introT0 = performance.now();
+      }
+    }
+    arrancarIntro();
+    document.addEventListener('visibilitychange', arrancarIntro);
+
     caja.addEventListener('pointermove', function (e) {
+      intro = false;   // manda la persona
       var r = caja.getBoundingClientRect();
       puntero.x = e.clientX - r.left;
       puntero.y = e.clientY - r.top;
@@ -112,6 +151,29 @@
       var r = caja.getBoundingClientRect();
       var ancho = r.width, alto = r.height;
       var cabeza = cadena[0];
+
+      /* La pasada de presentacion conduce al puntero como si hubiera
+         una mano. Un arco: entra abajo a la izquierda, sube por el
+         centro —donde esta el nombre— y sale arriba a la derecha.
+
+         La curva de tiempo es suave por los dos extremos, para que
+         no arranque ni termine de golpe. */
+      if (intro && introT0 !== null) {
+        var e = (t - introT0 - INTRO_ESPERA) / INTRO_DURA;
+        if (e >= 0 && e <= 1) {
+          var s = e < 0.5 ? 4 * e * e * e : 1 - Math.pow(-2 * e + 2, 3) / 2;
+          /* Sube todo el rato, con un hinchazon en el medio. Un arco
+             simetrico volvia a bajar al final y se leia como un ida y
+             vuelta; asi se lee como que la lana se va tejiendo hacia
+             arriba y sale por la esquina. */
+          puntero.x = ancho * (0.10 + 0.80 * s);
+          puntero.y = alto * (0.78 - 0.46 * s - 0.14 * Math.sin(s * Math.PI));
+          puntero.dentro = true;
+        } else if (e > 1) {
+          intro = false;
+          puntero.dentro = false;
+        }
+      }
 
       /* La presencia funde la mascara entera al entrar y salir el
          cursor, para que la mancha no aparezca de golpe. */

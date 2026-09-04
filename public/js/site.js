@@ -1034,8 +1034,23 @@
      hay nada que esperar. */
 
   function habilitarEntrada() {
-    if (document.visibilityState !== 'visible') return;
-    document.documentElement.classList.add('anima');
+    /* La clase se pone cuando la pagina se ve, no solo al cargar.
+
+       Antes se miraba una vez y punto: quien abria el sitio en una
+       pestania de fondo se quedaba sin entrada para siempre, porque
+       al volver ya nadie comprobaba. Ahora tambien se escucha el
+       cambio de visibilidad, asi que la entrada ocurre la primera
+       vez que la pagina esta delante.
+
+       Y sigue siendo esconder la clase y no el estado por defecto:
+       sin ella no hay animacion, pero el contenido esta puesto. */
+    function poner() {
+      if (document.visibilityState !== 'visible') return;
+      document.documentElement.classList.add('anima');
+      document.removeEventListener('visibilitychange', poner);
+    }
+    poner();
+    document.addEventListener('visibilitychange', poner);
   }
 
   habilitarEntrada();
