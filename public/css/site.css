@@ -44,6 +44,15 @@
   --tinta-45: #7a6242;     /* ocre oscuro */
   --noche: #1a0d06;        /* la sombra mas profunda del cuadro */
 
+  /* El color de los titulos, aparte de --noche.
+
+     --noche vale para dos cosas distintas: pintar letra y pintar
+     fondo —el boton de pedido, el aviso, el salto al contenido—.
+     Los titulos van en negro pleno, pero un fondo en negro puro
+     sobre una pagina de pergamino se ve duro, asi que los fondos se
+     quedan en la umbra de siempre. Dos usos, dos nombres. */
+  --titulo: #000;
+
   --arcilla: #9a6b34;      /* oro viejo: el acento */
   --arcilla-texto: #7d5526;/* el mismo, legible sobre pergamino */
 
@@ -280,7 +289,7 @@ button { font: inherit; color: inherit; }
 .marca {
   font-family: var(--serif); font-weight: 300;
   font-size: 1.375rem; letter-spacing: -0.01em;
-  color: var(--noche); white-space: nowrap;
+  color: var(--titulo); white-space: nowrap;
 }
 
 /* El índice no es un menú: es la lista de piezas. Recuerda todo
@@ -417,7 +426,7 @@ button { font: inherit; color: inherit; }
    Ese gris no llegaba al minimo ni con el velo puesto. La jerarquia
    la sostienen el tamanio y el espaciado, que no dependen del
    fondo. */
-.umbral__contenido .umbral__marca { color: #000; }
+.umbral__contenido .umbral__marca { color: var(--titulo); }
 /* Colgado de .umbral__contenido y no suelto: las reglas propias de
    cada parte estan mas abajo en el archivo y, a igual especificidad,
    ganaban por orden. Con el contenedor delante gana esta, y ademas
@@ -426,7 +435,7 @@ button { font: inherit; color: inherit; }
 .umbral__contenido .umbral__cuenta,
 .umbral__contenido .umbral__cuenta b,
 .umbral__contenido .umbral__cuenta span,
-.umbral__contenido .umbral__baja { color: #000; }
+.umbral__contenido .umbral__baja { color: var(--titulo); }
 
 /* Y un halo del color contrario detras de cada letra.
 
@@ -809,7 +818,7 @@ button { font: inherit; color: inherit; }
   font-family: var(--serif); font-weight: 300;
   font-size: clamp(1.9rem, 4vw, 3rem);
   line-height: 1.04; letter-spacing: -0.028em;
-  color: var(--noche); margin: 0;
+  color: var(--titulo); margin: 0;
   max-width: 12ch;
   display: block;
 }
@@ -829,7 +838,7 @@ button { font: inherit; color: inherit; }
 .ficha__rareza b {
   font-family: var(--serif); font-weight: 300;
   font-size: 2.3rem; line-height: 1;
-  color: var(--noche); font-variant-numeric: tabular-nums;
+  color: var(--titulo); font-variant-numeric: tabular-nums;
 }
 .rareza--no, .rareza--no b { color: var(--rosa-texto); }
 
@@ -1005,7 +1014,7 @@ button { font: inherit; color: inherit; }
   font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: 0.16em; text-transform: uppercase; color: var(--tinta-45);
 }
-.universo__nombre { font-size: clamp(2rem, 4.5vw, 3.4rem); letter-spacing: -0.03em; }
+.universo__nombre { font-size: clamp(2rem, 4.5vw, 3.4rem); letter-spacing: -0.03em; color: var(--titulo); }
 .universo__precio {
   font-family: var(--mono); font-size: var(--t-mayor);
   color: var(--tinta); font-variant-numeric: tabular-nums;
@@ -1066,7 +1075,7 @@ button { font: inherit; color: inherit; }
   gap: var(--s7); margin-bottom: var(--s8);
 }
 @media (max-width: 760px) { .pie__grid { grid-template-columns: 1fr; gap: var(--s6); } }
-.pie__marca { font-family: var(--serif); font-weight: 300; font-size: 1.75rem; color: var(--noche); margin-bottom: var(--s2); }
+.pie__marca { font-family: var(--serif); font-weight: 300; font-size: 1.75rem; color: var(--titulo); margin-bottom: var(--s2); }
 .cierre p { color: var(--tinta-70); font-size: 1.05rem; }
 .cierre h4 {
   font-family: var(--mono); font-size: var(--t-micro); font-weight: 400;
