@@ -129,6 +129,28 @@
     var puntero = { x: -9999, y: -9999, dentro: false };
     var velocidad = 0, presencia = 0, aLaVista = true, t0 = 0;
 
+    /* El revelado se apaga cuando no hay mancha que ensenar.
+
+       Bajarle la opacidad al grupo no ahorra nada: el navegador
+       igual pasa los circulos por el desenfoque, saca la mascara y
+       recompone con ella la imagen entera de la portada, cuadro tras
+       cuadro, para acabar dibujando algo transparente. Medido en
+       reposo, la opacidad del grupo era 1e-24 y ese trabajo seguia
+       corriendo igual: era toda la lentitud de la pagina.
+
+       Con display:none el elemento sale del arbol de pintado y no se
+       compone nada. Se enciende al acercarse el cursor y se apaga al
+       desvanecerse la mancha del todo. */
+    var imagen = caja.querySelector('.umbral__revelado image');
+    var pintando = true;
+
+    function revelar(si) {
+      if (si === pintando) return;
+      pintando = si;
+      grupo.style.display = si ? '' : 'none';
+      if (imagen) imagen.style.display = si ? '' : 'none';
+    }
+
     /* La presentacion espera a que la pagina se vea.
 
        En una pestania de fondo no hay cuadros: si el reloj arrancara
@@ -142,16 +164,30 @@
     function arrancarIntro() {
       if (introT0 === null && document.visibilityState === 'visible') {
         introT0 = performance.now();
+        document.removeEventListener('visibilitychange', arrancarIntro);
       }
     }
     arrancarIntro();
     document.addEventListener('visibilitychange', arrancarIntro);
 
+    /* El tejido pasa una sola vez en la vida de la pagina.
+
+       La guarda no puede ser "la mascara ya tiene barras": al
+       terminar la entrada las barras se quitan, asi que al volver a
+       la pestania la encontraba vacia y tejia la foto de nuevo. Cada
+       vez que alguien salia a otra ventana y volvia, la portada se
+       rehacia entera delante suyo. Hace falta un pestillo que, una
+       vez echado, no se abra mas. */
+    var tejido = false;
+
     function tejerFoto() {
+      if (tejido) return;
       var foto = caja.querySelector('.umbral__foto');
       var mascara = document.getElementById('umbralTejer');
-      if (!foto || !mascara || reducido || mascara.childNodes.length) return;
+      if (!foto || !mascara || reducido) return;
       if (document.visibilityState !== 'visible') return;
+      tejido = true;
+      document.removeEventListener('visibilitychange', tejerFoto);
 
       var alto = (100 / FILAS);
       for (var f = 0; f < FILAS; f++) {
@@ -200,9 +236,42 @@
         { rootMargin: '10%' }).observe(caja);
     }
 
+    /* Las lineas del fondo: un seno que viaja despacio, empujado por
+       el cursor.
+
+       Van a la mitad de cuadros. Rehacer las tres curvas obliga a
+       repintar el SVG de fondo entero, y a 0,35 radianes por segundo
+       la diferencia entre sesenta pasos y treinta no se ve. Lo que
+       si se nota es el repintado. */
+    var ONDA_CADA = 2;
+    var cuadro = 0;
+
+    function pintarOndas(t, ancho, alto, fv, sesgo) {
+      if (!ondas.length || ancho <= 0) return;
+      if ((cuadro++ % ONDA_CADA) !== 0) return;
+      var seg = reducido ? 0 : (t - t0) / 1000;
+      for (var l = 0; l < ondas.length; l++) {
+        var baseY = alto * (0.3 + l * 0.2);
+        var amp = 16 + l * 9 + fv * 14;
+        var frec = 1.6 + l * 0.4;
+        var fase = seg * (0.35 + l * 0.12) + sesgo * 1.4;
+        var d = '';
+        for (var m = 0; m <= MUESTRAS_ONDA; m++) {
+          var u = m / MUESTRAS_ONDA;
+          var x = u * ancho;
+          var y = baseY +
+            Math.sin(u * Math.PI * frec + fase) * amp +
+            Math.sin(u * Math.PI * frec * 2.3 + fase * 1.7) * amp * 0.25;
+          d += (m === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+        }
+        ondas[l].setAttribute('d', d);
+      }
+    }
+
     function marcha(t) {
       requestAnimationFrame(marcha);
-      if (!aLaVista) return;
+      // Fuera de pantalla no se dibuja nada, ni siquiera aparcado.
+      if (!aLaVista) { revelar(false); return; }
 
       var r = caja.getBoundingClientRect();
       var ancho = r.width, alto = r.height;
@@ -234,6 +303,21 @@
       /* La presencia funde la mascara entera al entrar y salir el
          cursor, para que la mancha no aparezca de golpe. */
       presencia += ((puntero.dentro ? 1 : 0) - presencia) * 0.12;
+
+      /* Por debajo de esto no queda nada visible que dibujar: el
+         umbral esta en la milesima, no en el cero, porque la
+         presencia se acerca a cero sin llegar nunca y si no la
+         pagina no dejaria de componer jamas. */
+      var activo = puntero.dentro || presencia > 0.002;
+      revelar(activo);
+
+      if (!activo) {
+        // Aparcada. Ni circulos, ni deriva, ni desenfoque.
+        if (capa && deriva > 0) capa.style.transform = '';
+        pintarOndas(t, ancho, alto, 0, 0);
+        return;
+      }
+
       grupo.style.opacity = presencia;
 
       if (puntero.dentro) {
@@ -279,32 +363,16 @@
       if (capa && deriva > 0 && ancho > 0 && alto > 0 && cabeza.x > -1000) {
         var nx = Math.min(Math.max((cabeza.x / ancho - 0.5) * -2, -1), 1);
         var ny = Math.min(Math.max((cabeza.y / alto - 0.5) * -2, -1), 1);
-        capa.style.transform = 'translate3d(' + (nx * deriva).toFixed(2) + 'px, ' +
-          (ny * deriva).toFixed(2) + 'px, 0)';
+        /* Escalada por la presencia: al irse el cursor la mancha se
+           desvanece y el texto vuelve a su sitio con ella, en vez de
+           quedarse corrido donde la dejaron. Ademas asi, cuando la
+           presencia toca el umbral de aparcar, la deriva ya vale
+           tres centesimas de pixel y el reset no se ve. */
+        capa.style.transform = 'translate3d(' + (nx * deriva * presencia).toFixed(2) + 'px, ' +
+          (ny * deriva * presencia).toFixed(2) + 'px, 0)';
       }
 
-      // Las lineas del fondo: un seno que viaja despacio, empujado
-      // por el cursor.
-      if (ondas.length && ancho > 0) {
-        var seg = reducido ? 0 : (t - t0) / 1000;
-        var sesgo = puntero.dentro ? cabeza.x / ancho - 0.5 : 0;
-        for (var l = 0; l < ondas.length; l++) {
-          var baseY = alto * (0.3 + l * 0.2);
-          var amp = 16 + l * 9 + fv * 14;
-          var frec = 1.6 + l * 0.4;
-          var fase = seg * (0.35 + l * 0.12) + sesgo * 1.4;
-          var d = '';
-          for (var m = 0; m <= MUESTRAS_ONDA; m++) {
-            var u = m / MUESTRAS_ONDA;
-            var x = u * ancho;
-            var y = baseY +
-              Math.sin(u * Math.PI * frec + fase) * amp +
-              Math.sin(u * Math.PI * frec * 2.3 + fase * 1.7) * amp * 0.25;
-            d += (m === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
-          }
-          ondas[l].setAttribute('d', d);
-        }
-      }
+      pintarOndas(t, ancho, alto, fv, puntero.dentro ? cabeza.x / ancho - 0.5 : 0);
     }
 
     requestAnimationFrame(function (t) { t0 = t; marcha(t); });
