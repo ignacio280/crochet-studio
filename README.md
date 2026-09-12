@@ -147,7 +147,9 @@ public/legal.html  términos, devoluciones y privacidad
 public/js/site.js  arma la tienda con lo que devuelve /api/site
 public/js/admin.js panel: productos, textos, fotos, respaldo
 public/js/legal.js renderiza la página legal
-public/css/, public/js/intro.js   diseño y telón de bienvenida
+public/js/umbral.js la portada: la mancha que teje bajo el cursor
+public/js/bola.js  el ovillo blanco del primer scroll
+public/css/        diseño (manda site.css; bola.css es solo el ovillo)
 ```
 
 `lib/app.js` habla el estándar de la web y no los objetos de `node:http`. Por
@@ -185,3 +187,11 @@ de 999 px. Todo eso son variables al principio de `public/css/site.css` y
   `public/js/site.js`.
 - El sitio viene con 5 productos de ejemplo. El panel muestra un aviso con un
   botón para borrarlos todos de una vez.
+- El primer gesto de bajar no baja: un ovillo blanco cruza la portada, el blanco
+  crece hasta tapar la pantalla y, por detrás de ese blanco, la página salta al
+  recorrido de piezas; al cerrarse el blanco queda la primera pieza puesta. Pasa
+  una vez por sesión (`sdb.bola` en `sessionStorage`), se remata con un clic o
+  Escape, y no ocurre con movimiento reducido, sin JavaScript ni si la página ya
+  viene con scroll hecho. Está en `public/js/bola.js`; los tiempos son cinco
+  constantes al principio (`VIAJE`, `PINTAR`, `REPOSO`, `SALIDA`, `ESCALON`) y
+  `ESPERA` es cuánto se deja entrar la portada antes de armarlo.

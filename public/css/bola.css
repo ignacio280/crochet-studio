@@ -1,0 +1,93 @@
+/* ============================================================
+   LA BOLA — el primer scroll no baja, pinta
+
+   Cuando la portada ya termino de entrar y alguien hace el primer
+   gesto de bajar, la pagina no se mueve: entra rodando un ovillo
+   blanco desde la izquierda, al llegar al centro el blanco crece
+   desde el hasta cubrir la pantalla y, con todo blanco, el scroll
+   salta al recorrido de piezas. Despues el blanco se cierra sobre
+   si mismo y lo que aparece es la coleccion.
+
+   Todo lo de aqui lo crea y lo borra /js/bola.js. Sin JavaScript,
+   o con movimiento reducido, nada de esto existe y el primer
+   scroll es el de siempre: la misma regla del resto del sitio, que
+   ninguna animacion puede ser la que trae el contenido.
+
+   Va en 240: sobre la cabecera y sobre la ficha, y debajo del
+   cursor propio (250) y del aviso (260), que son las dos cosas que
+   tienen que poder leerse incluso mientras la pantalla esta
+   pintada.
+   ============================================================ */
+
+.bola-escena {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  overflow: hidden;
+  pointer-events: none;   /* si algo falla, el sitio sigue usable */
+  contain: layout paint;
+}
+
+/* La estela: lo que el ovillo deja atras mientras cruza. Es un
+   borron suave, no una linea: la hebra desenfocada del recorrido. */
+.bola__rastro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 62vw;
+  height: calc(var(--bola-d) * 0.92);
+  margin-top: calc(var(--bola-d) * -0.46);
+  transform-origin: 100% 50%;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 72%,
+    rgba(255, 255, 255, 0.88) 100%);
+  filter: blur(14px);
+  opacity: 0;
+}
+
+/* El ovillo. La luz le entra por arriba a la izquierda, como a
+   todo lo demas del sitio, y la sombra que tira al suelo es de
+   umbra y no de negro: sobre pergamino un gris frio se ve sucio. */
+.bola {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--bola-d);
+  height: var(--bola-d);
+  margin: calc(var(--bola-d) / -2) 0 0 calc(var(--bola-d) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%,
+    #ffffff 0%, #fffdfa 54%, #f4ece0 100%);
+  box-shadow:
+    0 26px 60px rgba(46, 29, 15, 0.22),
+    inset -8px -12px 26px rgba(46, 29, 15, 0.05);
+}
+
+/* La hebra: el unico detalle que dice que es un ovillo y no una
+   pelota. Se apaga antes de que el blanco crezca. */
+.bola__hebra {
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px solid rgba(46, 29, 15, 0.07);
+  border-top-color: rgba(46, 29, 15, 0.14);
+}
+
+/* La pintura: la pantalla ya cubierta. Crece desde el diametro
+   exacto del ovillo y despues se cierra hacia el centro. No se
+   agranda el ovillo mismo: una capa con sombra y desenfoque
+   ampliada quince veces es una textura enorme, y eso se paga en
+   equipos modestos. */
+.bola-pintura {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  clip-path: circle(150% at 50% 50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bola-escena { display: none !important; }
+}
